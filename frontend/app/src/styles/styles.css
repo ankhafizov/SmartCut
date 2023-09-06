@@ -1,0 +1,98 @@
+.main {
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    justify-content:flex-start;
+}
+
+.videoPlayer {
+    display:flex;
+    flex-direction:row;
+    justify-content:flex-start;
+    align-items:center
+}
+
+.videoPlayer > strong {
+    margin-right: 10px;
+}
+
+#inputVideo {
+    width:100%;
+    height:480px;
+    margin-top:10px;
+    margin-bottom:20px;
+}
+
+.videoControlPanel {
+    width:100%;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-start;
+}
+
+#playBtn {
+    margin-right: 10px;
+}
+
+.videoSlider {
+    width:100%;
+    margin-right:10px
+}
+
+#tabsContainer {
+    margin-top:10px
+}
+
+#requestForm {
+    width: 100%
+}
+
+#requestForm td {
+    padding:5px;
+}
+
+#pluginControl {
+    width:100%;
+    display:flex;
+    flex-direction:row;
+    justify-content:flex-start;
+    align-items:center
+}
+
+h2.title {
+    margin-bottom:0;
+    padding-bottom:0;
+}
+
+#intervalsTable {
+    width: 100%;
+    border-collapse: collapse !important;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #cccccc;
+}
+
+#intervalsTable th {
+    text-align: left;
+}
+
+#intervalsTable td,#intervalsTable th {
+    border-width: 1px;
+    border-style: solid;
+    padding: 5px;
+    border-color: #cccccc;
+}
+
+#intervalsTable td {
+    cursor: pointer
+}
+
+#intervalsTable td.selected {
+    background-color: #dddddd;
+}
+
+.intervalsTableFooter {
+    text-align:center;
+    margin-top:10px
+}
