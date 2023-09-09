@@ -19,4 +19,4 @@
 docker-compose up
 ```
 
-Запуск фронтенда: http://localhost:8080
+Запуск фронтенда: http://localhost:8085

@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - 8080:8080
+      - 8085:8080
     networks:
       - smartcut
     depends_on:
