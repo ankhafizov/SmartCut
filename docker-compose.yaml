@@ -1,0 +1,32 @@
+services:
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 8085:8080
+    networks:
+      - smartcut
+    depends_on:
+      - backend
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - smartcut
+    volumes:
+      - smartcut:/data
+
+networks:
+  smartcut:
+    driver: bridge
+
+volumes:
+  smartcut:
