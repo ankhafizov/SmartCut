@@ -24,6 +24,21 @@ services:
     volumes:
       - smartcut:/data
 
+  detector_plugin:
+    container_name: detector_plugin
+    build:
+      context: ./plugins/detector
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - smartcut
+    volumes:
+      - smartcut:/data
+    depends_on:
+      - backend
+      - frontend
+      - kafka
+  
   zookeeper:
     image: wurstmeister/zookeeper
     container_name: zookeeper
@@ -59,6 +74,18 @@ services:
       timeout: 5s
       retries: 10
 
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    restart: "no"
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:29092"
+      JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
+    depends_on:
+      - kafka
+
+  
 networks:
   smartcut:
     driver: bridge
