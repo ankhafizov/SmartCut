@@ -15,4 +15,4 @@ plugin:
   img_size: 256
 
 kafka:
-  bootstrap_servers : kafka:29092
+  bootstrap_servers : 127.0.0.1:9092

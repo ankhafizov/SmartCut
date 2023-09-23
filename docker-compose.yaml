@@ -31,6 +31,8 @@ services:
       context: ./plugins
       dockerfile: ResNET_based_detector/Dockerfile
     restart: always
+    environment:
+      bootstrap_servers: kafka:29092
     depends_on:
       kafka:
         condition: service_healthy

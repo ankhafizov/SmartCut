@@ -7,7 +7,5 @@ WORKDIR /plugins
 RUN pip3 install -r ResNET_based_detector/requirements.txt
 RUN pip3 install -r common_utils/requirements.txt
 
-
-CMD ["python", "ResNET_based_detector/main.py"]
-# CMD ["python", "ResNET_based_detector/main.py", "kafka.bootstrap_servers=kafka:29092"]
+CMD ["sh", "-c", "python ResNET_based_detector/main.py kafka.bootstrap_servers=${bootstrap_servers}"]
 # ENTRYPOINT ["tail", "-f", "/dev/null"]
