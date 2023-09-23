@@ -19,7 +19,7 @@ services:
       dockerfile: Dockerfile
     restart: always
     volumes:
-      - smartcut:/data
+      - ./temp_data:/data
 
   resnet_based_detector_plugin:
     container_name: resnet_based_detector_plugin
@@ -33,7 +33,7 @@ services:
       kafka:
         condition: service_healthy
     volumes:
-      - smartcut:/data
+      - ./temp_data:/data
 
   # detector_plugin:
   #   container_name: detector_plugin
