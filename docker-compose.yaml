@@ -1,44 +1,57 @@
+version: '3'
 services:
 
-  frontend:
-    container_name: frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    restart: always
-    ports:
-      - 8085:8080
-    networks:
-      - smartcut
-    depends_on:
-      - backend
+  # frontend:
+  #   container_name: frontend
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   ports:
+  #     - 8085:8080
+  #   networks:
+  #     - smartcut
+  #   depends_on:
+  #     - backend
 
-  backend:
-    container_name: backend
+  # backend:
+  #   container_name: backend
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   networks:
+  #     - smartcut
+  #   volumes:
+  #     - smartcut:/data
+
+  resnet_based_detector_plugin:
+    container_name: resnet_based_detector_plugin
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: ./plugins
+      dockerfile: ResNET_based_detector/Dockerfile
     restart: always
-    networks:
-      - smartcut
+    depends_on:
+      kafka:
+        condition: service_healthy
     volumes:
       - smartcut:/data
 
-  detector_plugin:
-    container_name: detector_plugin
-    build:
-      context: ./plugins/detector
-      dockerfile: Dockerfile
-    restart: always
-    networks:
-      - smartcut
-    volumes:
-      - smartcut:/data
-    depends_on:
-      - backend
-      - frontend
-      - kafka
-  
+  # detector_plugin:
+  #   container_name: detector_plugin
+  #   build:
+  #     context: ./plugins/detector
+  #     dockerfile: Dockerfile
+  #   restart: always
+  #   networks:
+  #     - smartcut
+  #   volumes:
+  #     - smartcut:/data
+  #   depends_on:
+  #     - backend
+  #     - frontend
+  #     - kafka
+
   zookeeper:
     image: wurstmeister/zookeeper
     container_name: zookeeper
@@ -73,10 +86,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-
   kafdrop:
     image: obsidiandynamics/kafdrop
-    restart: "no"
+    container_name: kafdrop
+    restart: always
     ports:
       - "9000:9000"
     environment:
@@ -84,11 +97,6 @@ services:
       JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
     depends_on:
       - kafka
-
-  
-networks:
-  smartcut:
-    driver: bridge
 
 volumes:
   smartcut:
