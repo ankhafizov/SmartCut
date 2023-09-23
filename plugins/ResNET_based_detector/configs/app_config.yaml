@@ -1,7 +1,7 @@
 defaults:  # настройки гидры
   - _self_  
   - override hydra/hydra_logging: disabled  
-  - override hydra/job_logging: disabled  
+  - override hydra/job_logging: custom  
 
 hydra:  # настройки гидры
   output_subdir: null  
