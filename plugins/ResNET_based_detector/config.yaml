@@ -1,8 +1,0 @@
-plugin:
-  name: "resnet_based_detector"
-  label: "детектор аномалий"
-  img_size: 256
-
-
-kafka:
-  bootstrap_servers : 127.0.0.1:9092

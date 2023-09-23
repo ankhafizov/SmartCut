@@ -1,0 +1,18 @@
+defaults:  # настройки гидры
+  - _self_  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled  
+
+hydra:  # настройки гидры
+  output_subdir: null  
+  run:  
+    dir: .
+
+
+plugin:
+  name: "resnet_based_detector"
+  label: "детектор аномалий"
+  img_size: 256
+
+kafka:
+  bootstrap_servers : kafka:29092
