@@ -1,14 +1,10 @@
 from kafka import KafkaProducer
 from json import dumps
-import yaml
+import sys
 
+sys.path.append("..")
 
-def read_config(path: str) -> dict:
-    with open(path, "r") as f:
-        config = yaml.safe_load(f)
-
-    return config
-
+from plugins.common_utils.common_helpers import read_config  # noqa: E402
 
 config = read_config("ResNET_based_detector/configs/app_config.yaml")
 
