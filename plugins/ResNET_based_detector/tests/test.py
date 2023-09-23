@@ -11,8 +11,9 @@ config = read_config("ResNET_based_detector/configs/app_config.yaml")
 topic = topic = f"{config['plugin']['name']}-new-files"
 bootstrap_servers = "127.0.0.1:9092"  # config["kafka"]["bootstrap_servers"]
 data = {
+    "user_id": "user_id1",
     "status": "uploaded",
-    "zipped_images_path": "40b1fea2-4a91-11ee-be56-0242ac120002/video_name1",
+    "zipped_chunks_path": "40b1fea2-4a91-11ee-be56-0242ac120002/video_name1",
 }
 
 kafka_producer = KafkaProducer(

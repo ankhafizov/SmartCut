@@ -1,5 +1,6 @@
 import sys
 import hydra
+
 from omegaconf import DictConfig
 
 sys.path.append("..")
@@ -19,7 +20,26 @@ def main(config: DictConfig) -> None:
     )
 
     for message in kafka_helper.check_new_uploaded_videos():
-        print(message)
+        if message["status"] == "in-progress":
+            # TODO code here
+            pass
+        elif message["status"] == "uploaded":
+            # TODO code here
+            timestamps = [
+                {"start": 10, "stop": 30},
+                {"start": 60, "stop": 90},
+                {"start": 120, "stop": 150},
+            ]
+
+            kafka_helper.send_processed_file_timestamps_info(
+                user_id=message["user_id"],
+                timestamps=timestamps,
+                zipped_chunks_path=message["zipped_chunks_path"],
+            )
+
+            pass
+        else:
+            raise ValueError("Unknown received message status")
 
 
 if __name__ == "__main__":
