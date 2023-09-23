@@ -1,29 +1,25 @@
 version: '3'
 services:
 
-  # frontend:
-  #   container_name: frontend
-  #   build:
-  #     context: ./frontend
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   ports:
-  #     - 8085:8080
-  #   networks:
-  #     - smartcut
-  #   depends_on:
-  #     - backend
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - 8085:8080
+    depends_on:
+      - backend
 
-  # backend:
-  #   container_name: backend
-  #   build:
-  #     context: ./backend
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   networks:
-  #     - smartcut
-  #   volumes:
-  #     - smartcut:/data
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    volumes:
+      - smartcut:/data
 
   resnet_based_detector_plugin:
     container_name: resnet_based_detector_plugin
@@ -88,6 +84,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
   kafdrop:
     image: obsidiandynamics/kafdrop
     container_name: kafdrop
