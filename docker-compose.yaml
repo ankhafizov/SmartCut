@@ -35,20 +35,19 @@ services:
     volumes:
       - ./temp_data:/data
 
-  # detector_plugin:
-  #   container_name: detector_plugin
-  #   build:
-  #     context: ./plugins/detector
-  #     dockerfile: Dockerfile
-  #   restart: always
-  #   networks:
-  #     - smartcut
-  #   volumes:
-  #     - smartcut:/data
-  #   depends_on:
-  #     - backend
-  #     - frontend
-  #     - kafka
+  yolo_based_detector_plugin:
+    container_name: yolo_based_detector_plugin
+    build:
+      context: ./plugins
+      dockerfile: YOLO_based_detector/Dockerfile
+    restart: always
+    environment:
+      bootstrap_servers: kafka:29092
+    depends_on:
+      kafka:
+        condition: service_healthy
+    volumes:
+      - ./temp_data:/data
 
   zookeeper:
     image: wurstmeister/zookeeper

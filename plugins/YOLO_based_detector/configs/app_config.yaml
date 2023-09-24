@@ -1,0 +1,18 @@
+defaults:  # настройки гидры
+  - _self_  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: custom  
+
+hydra:  # настройки гидры
+  output_subdir: null  
+  run:  
+    dir: .
+
+
+plugin:
+  name: "yolo_based_detector"
+  label: "детектор"
+  img_size: 256
+
+kafka:
+  bootstrap_servers : 127.0.0.1:9092
