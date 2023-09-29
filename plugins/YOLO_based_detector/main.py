@@ -3,6 +3,8 @@ import hydra
 
 from omegaconf import DictConfig
 
+from plugins.YOLO_based_detector.yolo_utils import init_yolo_model, process_chunk
+
 sys.path.append("..")
 
 from plugins.common_utils.kafka_helpers import KafkaHelper  # noqa: E402
@@ -18,11 +20,13 @@ def main(config: DictConfig) -> None:
         plugin_label=config["plugin"]["label"],
         input_img_size=config["plugin"]["img_size"],
     )
+    model = init_yolo_model()
 
     for message in kafka_helper.check_new_uploaded_videos():
         if message["status"] == "in-progress":
-            # TODO code here
-            pass
+
+            chunk_timestamps = process_chunk(model, config["zipped_chunk_path"], config["detect_class"], config["chunk_size"])
+
         elif message["status"] == "uploaded":
             # TODO code here
             timestamps = [
@@ -41,6 +45,7 @@ def main(config: DictConfig) -> None:
         else:
             raise ValueError("Unknown received message status")
 
+ 
 
 if __name__ == "__main__":
     main()

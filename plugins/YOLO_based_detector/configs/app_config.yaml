@@ -13,6 +13,8 @@ plugin:
   name: "yolo_based_detector"
   label: "детектор"
   img_size: 256
+  detect_class: 'car'
+  chunk_size: 50
 
 kafka:
   bootstrap_servers : 127.0.0.1:9092
