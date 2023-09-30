@@ -6,10 +6,10 @@ import numpy as np
 from omegaconf import DictConfig
 import logging
 
-from plugins.ResNET_based_detector.core.FeatureExtractor import FeatureExtractor
-
 sys.path.append("..")
 
+from plugins.ResNET_based_detector.core.FeatureExtractor import FeatureExtractor  # noqa: E402
+from plugins.ResNET_based_detector.core.TimestampExtractor import TimestampExtractor  # noqa: E402
 from plugins.common_utils.kafka_helpers import KafkaHelper  # noqa: E402
 from plugins.common_utils.common_helpers import unzip_archive  # noqa: E402
 
@@ -19,34 +19,32 @@ def main(config: DictConfig) -> None:
     kafka_helper = KafkaHelper(
         bootstrap_servers=config["kafka"]["bootstrap_servers"], plugin_name=config["plugin"]["name"]
     )
-    feature_extractor_node = FeatureExtractor(config["feature_extractor_node"])
+    feature_extractor = FeatureExtractor(config["feature_extractor_node"])
+    timestamp_extractor = TimestampExtractor(config["timestamp_extractor"])
 
     kafka_helper.send_plugin_init_message(
         plugin_label=config["plugin"]["label"],
         input_img_size=config["plugin"]["img_size"],
     )
 
+    temp_data_folder = f"{config['plugin']['data_folder']}/"
+
     for message in kafka_helper.check_new_uploaded_videos():
         if message["status"] == "in-progress":
-            zipped_chunks_path = (
-                f"{config['plugin']['data_folder']}/" + message["zipped_chunks_path"]
-            )
+            zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
             dst_path = unzip_archive(zipped_chunks_path)
 
             logging.info(f"started to process {len(glob(f'{dst_path}/*jpg'))} files")
             for img_path in glob(f"{dst_path}/*{config['plugin']['img_extention']}"):
                 img_bgr = cv2.imread(img_path)
                 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-                feature_vector = feature_extractor_node.extract_feature_vector(img_rgb)
+                feature_vector = feature_extractor.extract_feature_vector(img_rgb)
                 np.save(img_path.replace(".jpg", ".npy"), feature_vector)
             logging.info(f"finish processing: {zipped_chunks_path}")
         elif message["status"] == "uploaded":
-            # TODO code here
-            timestamps = [
-                {"start": 10, "stop": 30},
-                {"start": 60, "stop": 90},
-                {"start": 120, "stop": 150},
-            ]
+            timestamps = timestamp_extractor.get_events_timestamps(
+                temp_data_folder + message["zipped_chunks_path"]
+            )
 
             kafka_helper.send_processed_file_timestamps_info(
                 user_id=message["user_id"],
