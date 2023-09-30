@@ -64,6 +64,7 @@ class KafkaHelper:
             bootstrap_servers=self.bootstrap_servers,
             value_deserializer=lambda x: loads(x.decode("utf-8")),
         )
+        logging.info("listening kafka")
 
         for message in kafka_consumer:
             message_json = message.value

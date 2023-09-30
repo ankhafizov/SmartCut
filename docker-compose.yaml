@@ -33,7 +33,7 @@ services:
       kafka:
         condition: service_healthy
     volumes:
-      - ./temp_data:/data
+      - ./temp_data:/temp_data
 
   # detector_plugin:
   #   container_name: detector_plugin

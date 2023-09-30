@@ -12,8 +12,8 @@ topic = topic = f"{config['plugin']['name']}-new-files"
 bootstrap_servers = "127.0.0.1:9092"  # config["kafka"]["bootstrap_servers"]
 data = {
     "user_id": "user_id1",
-    "status": "uploaded",
-    "zipped_chunks_path": "40b1fea2-4a91-11ee-be56-0242ac120002/video_name1",
+    "status": "in-progress",
+    "zipped_chunks_path": "8b75eaec-722c-43f2-8b08-8900ca82146a/VID_20180722_113623.mp4/0.zip",
 }
 
 kafka_producer = KafkaProducer(
