@@ -1,4 +1,5 @@
 import sys
+import os
 import hydra
 from glob import glob
 import cv2
@@ -34,13 +35,21 @@ def main(config: DictConfig) -> None:
             zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
             dst_path = unzip_archive(zipped_chunks_path)
 
-            logging.info(f"started to process {len(glob(f'{dst_path}/*jpg'))} files")
-            for img_path in glob(f"{dst_path}/*{config['plugin']['img_extention']}"):
+            img_paths_to_process = [
+                img_path
+                for img_path in glob(f"{dst_path}/*{config['plugin']['img_extention']}")
+                if not os.path.isfile(img_path.replace(config["plugin"]["img_extention"], "npy"))
+            ]
+
+            logging.info(f"processing {len(img_paths_to_process)} files in {dst_path}")
+            for img_path in img_paths_to_process:
                 img_bgr = cv2.imread(img_path)
                 img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
                 feature_vector = feature_extractor.extract_feature_vector(img_rgb)
                 np.save(img_path.replace(".jpg", ".npy"), feature_vector)
-            logging.info(f"finish processing: {zipped_chunks_path}")
+            logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
+
+            os.remove(zipped_chunks_path)
         elif message["status"] == "uploaded":
             timestamps = timestamp_extractor.get_events_timestamps(
                 temp_data_folder + message["zipped_chunks_path"]
