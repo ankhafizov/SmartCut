@@ -8,6 +8,7 @@ class TimestampExtractor:
     def __init__(self, config) -> None:
         self.min_pair_resolution_secs = config["min_pair_resolution_secs"]
         self.min_pair_length_secs = config["min_pair_length_secs"]
+        self.std_scaling_param = config["std_scaling_param"]
 
     def get_events_timestamps(self, folder_with_npy_vectors_path):
         mean_vec = self._calc_mean_vec(folder_with_npy_vectors_path)
@@ -15,7 +16,10 @@ class TimestampExtractor:
             mean_vec, folder_with_npy_vectors_path
         )
 
-        events_time_mask = ((1 - cos_similarities) > 3 * np.std(cos_similarities)).astype(int)
+        # операция аналогичная поиску в пределах сигма окрестности от среднего
+        events_time_mask = (
+            (1 - cos_similarities) > self.std_scaling_param * np.std(cos_similarities)
+        ).astype(int)
 
         start_stop_pairs = self._get_start_stop_pair_indexes(
             events_time_mask,
