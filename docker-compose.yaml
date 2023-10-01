@@ -17,9 +17,17 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    environment:
+      KAFKA_BOOTSTRAP_SERVER: kafka:29092
+      KAFKA_POLL_PERIOD: 5
+      RESULT_TIME_TO_LIVE: 60
     restart: always
     volumes:
       - ./temp_data:/data
+    depends_on:
+      kafka:
+        condition: service_healthy
+
 
   resnet_based_detector_plugin:
     container_name: resnet_based_detector_plugin

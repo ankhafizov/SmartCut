@@ -95,7 +95,6 @@ export default function RequestForm(
         try {
             const uid = uuidv4();
             await uploadVideo(uid);
-            await postIntervalsRequest(uid);
             setUploadPercent(100);
             setUploadStepTitle("Ожидание результата");
             await downloadResultIntervals(uid);
@@ -104,10 +103,6 @@ export default function RequestForm(
         } finally {
             setModalOpen(false);
         }
-    }
-
-    const postIntervalsRequest = async(uid) => {
-        await fetchWithTimeout(getBackendUrl()+`/post_video_to_plugin/${uid}/${plugin.value}/${videoFileName}`);
     }
 
     const uploadVideo = async(uid) => {
@@ -122,17 +117,20 @@ export default function RequestForm(
         for (let startTime = 0; startTime < video.duration; startTime += period * numFrames) {
             setUploadPercent(parseInt(startTime/video.duration*100));
             const zip = await extractor.extract(startTime, seconds, numFrames);
-            await uploadZip(uid, videoFileName, startTime + ".zip", zip);
+            const is_last = startTime+period*numFrames >= video.duration
+            await uploadZip(uid, videoFileName, startTime + ".zip", zip, is_last);
         }
         extractor.destroy();
     }
 
-    const uploadZip = async(uid, videoFileName, archiveName, zip, attempt=0) => {
+    const uploadZip = async(uid, videoFileName, archiveName, zip, is_last = false, attempt= 0) => {
         try {
             const body = new FormData();
-            body.append("uid", uid);
+            body.append("user_request_uid", uid)
             body.append("video_file_name", videoFileName);
+            body.append("plugin_name", plugin.value);
             body.append("zip", zip, archiveName);
+            body.append("is_last", is_last);
             await fetchWithTimeout(getBackendUrl()+`/upload_zip`, {
                 method: "POST",
                 body: body,
@@ -140,7 +138,7 @@ export default function RequestForm(
         } catch (err) {
             console.error(err);
             if (attempt<5) {
-                await uploadZip(uid, videoFileName, archiveName, zip,attempt+1);
+                await uploadZip(uid, videoFileName, archiveName, zip,is_last, attempt+1);
             } else {
                 throw err;
             }
@@ -148,7 +146,6 @@ export default function RequestForm(
     }
 
     const downloadResultIntervals = async(uid) => {
-        await timeout(5000);
         const detectedIntervals = await getProcessedVideoIntervals(uid);
         if (detectedIntervals && detectedIntervals.length) {
             setIntervals(detectedIntervals);
@@ -183,7 +180,7 @@ export default function RequestForm(
             json.unshift({plugin_name:"", label:"Укажите плагин"})
             setPluginsList(json.map(plug => ({value: plug.plugin_name, label: plug.label, size: plug.size})));
         } catch (err) {
-            message.error("Ошибка при получении списка плагинов: "+err.toString())
+            message.error("Ошибка при получении списка плагинов")
         }
     }
 
