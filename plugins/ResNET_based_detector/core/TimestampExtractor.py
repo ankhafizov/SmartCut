@@ -24,7 +24,7 @@ class TimestampExtractor:
         )
 
         return [
-            {"start": timestamps[start], "stop": timestamps[stop]}
+            {"start": int(timestamps[start]), "stop": int(timestamps[stop])}
             for start, stop in start_stop_pairs
             if stop - start > 0
         ]
