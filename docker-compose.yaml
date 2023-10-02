@@ -20,7 +20,10 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVER: kafka:29092
       KAFKA_POLL_PERIOD: 5
-      RESULT_TIME_TO_LIVE: 60
+      USER_REQUESTS_LIMIT: 3
+      SESSION_TIMEOUT: 3600
+      REQUEST_TIMEOUT: 1800
+      RESULT_TIMEOUT: 30
     restart: always
     volumes:
       - ./temp_data:/data
