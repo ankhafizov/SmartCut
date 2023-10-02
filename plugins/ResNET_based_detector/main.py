@@ -49,6 +49,11 @@ def main(config: DictConfig) -> None:
                 np.save(img_path.replace(".jpg", ".npy"), feature_vector)
             logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
 
+            kafka_helper.send_processed_chunk_notification(
+                user_id=message["user_id"],
+                processed_zipped_chunk_path=message["last_zipped_chunk_path"],
+            )
+
             os.remove(zipped_chunks_path)
         elif message["status"] == "uploaded":
             timestamps = timestamp_extractor.get_events_timestamps(

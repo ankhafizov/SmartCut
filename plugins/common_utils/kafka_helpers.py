@@ -90,7 +90,7 @@ class KafkaHelper:
             user_id (str): UUID пользователя,
             timestamps (list[dict[str:int]],): список временных меток вида
                 {"start" : 10, "stop" : 30},
-            zipped_chunks_path (str): путь временного хранения кадров внутри системы.
+            zipped_chunks_path (str): путь временного хранения кадров внутри shared-volume системы.
         """
         assert "\\" not in zipped_chunks_path
         for t in timestamps:
@@ -104,6 +104,31 @@ class KafkaHelper:
             "video_name": video_name,
             "plugin_name": self.plugin_name,
             "timestamps": timestamps,
+        }
+
+        self.kafka_producer.send(self.out_topic_for_timestamps, value=data).get(timeout=1)
+        logging.info(f"KAFKA sent processing result: {data} topic {self.out_topic_for_timestamps}")
+
+    def send_processed_chunk_notification(self, user_id: str, processed_zipped_chunk_path: str):
+        """формирует сообщение в кафку о завершении обработки одного чанка для отображения
+        информации на фронте.
+        Пункт 3.3 архитектуры.
+
+        Args:
+            user_id (str): UUID пользователя,
+            processed_zipped_chunk_path (str): путь до обработанного zip-файла чанка относительно
+                shared-volume (как в приходящем сообщении от бэкенда).
+        """
+
+        assert "\\" not in processed_zipped_chunk_path
+        request_uid, video_name, processed_chunk = processed_zipped_chunk_path.split("/")
+
+        data = {
+            "user_id": user_id,
+            "user_request_uid": request_uid,
+            "video_name": video_name,
+            "plugin_name": self.plugin_name,
+            "processed_chunk": processed_chunk,
         }
 
         self.kafka_producer.send(self.out_topic_for_timestamps, value=data).get(timeout=1)
