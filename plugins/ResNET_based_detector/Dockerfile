@@ -7,6 +7,7 @@ RUN pip3 install torchvision
 RUN pip3 install hydra-core
 RUN pip3 install opencv-python
 RUN pip3 install scipy
+RUN pip3 install natsort
 
 COPY /common_utils /plugins/common_utils
 COPY /ResNET_based_detector /plugins/ResNET_based_detector

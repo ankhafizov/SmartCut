@@ -2,6 +2,7 @@ import numpy as np
 from os import path
 from glob import glob
 from scipy.ndimage import binary_closing, binary_opening
+from natsort import natsorted
 
 
 class TimestampExtractor:
@@ -46,7 +47,7 @@ class TimestampExtractor:
     def _calc_cos_similarities_to_timestamps(self, mean_vec, folder_with_npy_vectors_path):
         cos_similarities = []
         timestamps = []
-        for vec_file_path in glob(f"{folder_with_npy_vectors_path}/*.npy"):
+        for vec_file_path in natsorted(glob(f"{folder_with_npy_vectors_path}/*.npy")):
             vec = np.load(vec_file_path)
             cos_sim = np.dot(vec, mean_vec) / (np.linalg.norm(vec) * np.linalg.norm(mean_vec))
             timestamp = int(path.basename(vec_file_path[:-4]))

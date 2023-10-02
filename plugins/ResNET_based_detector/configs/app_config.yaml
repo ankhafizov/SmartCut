@@ -16,7 +16,7 @@ feature_extractor_node:
 
 timestamp_extractor:
   std_scaling_param: 1 # коэф чувствиетельности к анномалиям (1: 32% событий – 2: 5% событий – 99.7: 0.3% событий)
-  min_pair_resolution_secs: 10
+  min_pair_resolution_secs: 15
   min_pair_length_secs: 10
 
 plugin:
