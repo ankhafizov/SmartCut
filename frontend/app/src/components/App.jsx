@@ -4,6 +4,7 @@ import {CaretRightFilled, PauseOutlined, DownloadOutlined} from '@ant-design/ico
 import {secsToTimeStr} from "../utils/utils.js";
 import RequestForm from "./RequestForm.jsx";
 import ResultsTable from "./ResultsTable.jsx";
+import {getBackendUrl} from "../config/config.js";
 import "../styles/styles.css";
 
 /**
@@ -23,9 +24,14 @@ function App() {
     const video = document.getElementById("inputVideo");
 
     useEffect(() => {
+        auth().then()
         window.scAppState = {};
         setupVideoEventListeners();
     }, [])
+
+    const auth = async() => {
+        await fetch(getBackendUrl()+"/auth")
+    }
 
     const render = () => {
         return <>
