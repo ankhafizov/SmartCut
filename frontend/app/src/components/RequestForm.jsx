@@ -101,18 +101,21 @@ export default function RequestForm(
         setInferencePercent(0);
         const error = await uploadVideo(uid);
         if (error) {
+            setModalOpen(false);
             message.error(error);
             return
         }
         setUploadPercent(100);
         await downloadResultIntervals(uid);
-        setInferencePercent(100)
+        setInferencePercent(98)
         setModalOpen(false);
     }
 
     const uploadVideo = async(uid) => {
         const response = await fetchWithTimeout(getBackendUrl()+"/create_request/"+uid);
-        if (response.status !== 200) {
+        if (response.status === 403) {
+            window.location.reload();
+        } else if (response.status !== 200) {
             return (await response.json()).detail
         }
         const extractor = new FramesExtractor();
@@ -127,7 +130,8 @@ export default function RequestForm(
                 const is_last = startTime+period*chunkSize >= video.duration
                 const response = await uploadZip(uid, videoFileName, startTime + ".zip", zip, is_last);
                 const json = await response.json();
-                setInferencePercent(parseInt((json.processed_chunks / (video.duration/period/chunkSize))*100))
+                const percent = parseInt((json.processed_chunks / (video.duration/period/chunkSize))*100);
+                setInferencePercent(percent > 98 ? 98 : percent)
             } catch (err) {
                 message.error(err.toString())
                 break;
@@ -177,7 +181,8 @@ export default function RequestForm(
                 if (json.timestamps && typeof(json.timestamps) === "object") {
                     return json.timestamps;
                 } else if (typeof(json.processed_chunks) === "number") {
-                    setInferencePercent(parseInt((json.processed_chunks / (video.duration/period/chunkSize))*100))
+                    let percent = parseInt((json.processed_chunks / (video.duration/period/chunkSize))*100);
+                    setInferencePercent(percent > 98 ? 98 : percent)
                 }
             } else if (response.status !== 404) {
                 return

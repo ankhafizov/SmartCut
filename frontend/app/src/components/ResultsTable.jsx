@@ -1,6 +1,6 @@
-import {useEffect} from "react";
-import {Button, TimePicker} from "antd";
-import {CloseOutlined, DownloadOutlined} from "@ant-design/icons";
+import {useState,useEffect} from "react";
+import {Button, Modal, Progress, TimePicker} from "antd";
+import {CloseOutlined, DownloadOutlined, PlusOutlined} from "@ant-design/icons";
 import dayjs from "dayjs";
 import {secsToTimeStr, timeStrToSecs} from "../utils/utils.js";
 import {cutVideo, ensureFfmpegLoaded} from "../services/ffmpeg.js";
@@ -12,6 +12,10 @@ export default function ResultsTable(
     {videoFileName, videoSrc, intervals, setIntervals, selectedInterval,setSelectedInterval,changeVideoPositions}) {
 
     const video = document.getElementById("inputVideo");
+
+    const [modalOpen, setModalOpen] = useState(false);
+    const [progressModalTitle,setProgressModalTitle] = useState("");
+    const [downloadPercent, setDownloadPercent] = useState(0)
 
     useEffect(() => {
         loadFfmpeg().then();
@@ -26,9 +30,13 @@ export default function ResultsTable(
                         <th>Начало</th>
                         <th>Конец</th>
                         <th>Длина</th>
-                        <th>Действия</th>
+                        <th>
+                            <Button type="primary" style={{backgroundColor:"green"}} icon={<PlusOutlined/>}
+                                    onClick={()=>onAddIntervalClick()}>Добавить
+                            </Button>
+                        </th>
                     </tr>
-                    {intervals.map((interval,index) => renderInterval(interval, index))}
+                    {intervals.sort((i1,i2)=>i1.start-i2.start).map((interval,index) => renderInterval(interval, index))}
                     </tbody>
                 </table>
                 <div style={{display:intervals.length ? "" : "none"}} className="intervalsTableFooter">
@@ -36,6 +44,7 @@ export default function ResultsTable(
                         Скачать все
                     </Button>
                 </div>
+                {renderProgressModal()}
             </>
         )
     }
@@ -44,7 +53,7 @@ export default function ResultsTable(
         return (
             <tr key={"interval_"+index}>
                 <td onClick={()=>selectInterval(index)}
-                    className={index === selectedInterval ? "selected" : ""}>
+                    className={interval === selectedInterval ? "selected" : ""}>
                     <TimePicker value={dayjs(secsToTimeStr(interval.start), 'HH:mm:ss')} size="small"
                                 onChange={(time,strTime) => {
                                     onTimeChange(index,strTime,'start')
@@ -55,7 +64,7 @@ export default function ResultsTable(
 
                 </td>
                 <td onClick={()=>selectInterval(index)}
-                    className={index === selectedInterval ? "selected" : ""}>
+                    className={interval === selectedInterval ? "selected" : ""}>
                     <TimePicker value={dayjs(secsToTimeStr(interval.stop), 'HH:mm:ss')} size="small"
                                 onChange={(time,strTime) => {
                                     onTimeChange(index,strTime,'stop')
@@ -65,11 +74,11 @@ export default function ResultsTable(
                     />
                 </td>
                 <td onClick={()=>selectInterval(index)}
-                    className={index === selectedInterval ? "selected" : ""}>
+                    className={interval === selectedInterval ? "selected" : ""}>
                     {secsToTimeStr(interval.stop-interval.start)}
                 </td>
                 <td onClick={()=>selectInterval(index)}
-                    className={index === selectedInterval ? "selected" : ""}>
+                    className={interval === selectedInterval ? "selected" : ""}>
                     <Button icon={<DownloadOutlined/>}
                             size="small" title="Скачать" type="primary" style={{marginRight:10}}
                             onClick={()=>downloadInterval(intervals[index].start,intervals[index].stop)}
@@ -82,6 +91,22 @@ export default function ResultsTable(
         )
     }
 
+    const renderProgressModal = () => {
+        return (
+            <Modal
+                open={modalOpen}
+                title=""
+                footer={[
+                ]}
+                closeIcon={null}
+            >
+                <h2>Экспорт видео</h2>
+                <span>{progressModalTitle}</span>
+                <Progress percent={downloadPercent} />
+            </Modal>
+        )
+    }
+
     const onTimeChange = (index, time, intervalType) => {
         const ints = [...intervals];
         document.getElementById("inputVideo").pause();
@@ -91,28 +116,34 @@ export default function ResultsTable(
         }
         ints[index][intervalType] = secs;
         setIntervals(ints);
-        setSelectedInterval(index);
+        setSelectedInterval(intervals[index]);
         changeVideoPositions(ints[index].start,ints[index].stop,
             intervalType === 'start' ? ints[index].start : ints[index].stop);
     };
 
     const onTimeSelect = (index, intervalType) => {
-        setSelectedInterval(index);
+        setSelectedInterval(intervals[index]);
         changeVideoPositions(intervals[index].start,intervals[index].stop,
             intervalType === 'start' ? intervals[index].start : intervals[index].stop);
     }
 
     const selectInterval = (index) => {
-        setSelectedInterval(index);
+        setSelectedInterval(intervals[index]);
         changeVideoPositions(intervals[index].start,intervals[index].stop,intervals[index].start);
     }
 
     const downloadAllIntervals = async() => {
         const zip = new JSZip();
-        for (let interval of intervals) {
+        setModalOpen(true);
+        setProgressModalTitle("");
+        setDownloadPercent(0)
+        for (let index in intervals) {
+            const interval = intervals[index];
+            setDownloadPercent(parseInt((index)/(intervals.length+1)*100))
             const [blob, fileName] = await cutVideoInterval(interval.start, interval.stop);
             zip.file(fileName,blob)
         }
+        setProgressModalTitle(`Упаковка в ZIP-архив`);
         const blob = await zip.generateAsync({
             type:'blob',
             compression: "DEFLATE",
@@ -120,6 +151,7 @@ export default function ResultsTable(
                 level: 9
             }
         })
+        setModalOpen(false);
         const a = document.createElement("a");
         a.download = "intervals.zip"
         a.href = URL.createObjectURL(blob);
@@ -129,21 +161,34 @@ export default function ResultsTable(
     }
 
     const downloadInterval = async(start, stop) => {
+        setModalOpen(true);
+        setProgressModalTitle("");
+        setDownloadPercent(0);
         const [blob, fileName] = await cutVideoInterval(start, stop);
         const a = document.createElement("a");
         a.download = fileName
         a.href = URL.createObjectURL(blob);
+        setDownloadPercent(100);
+        setModalOpen(false);
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
     }
 
     const cutVideoInterval = async(start, stop) => {
-        const data = await cutVideo(videoSrc, start, stop)
         const parts = videoFileName.split(".");
         const extension = parts.pop();
         let fileName = `${parts.join(".")}-${secsToTimeStr(start)}-${secsToTimeStr(stop)}.${extension}`;
+        setProgressModalTitle(`Экспорт ${fileName}`);
+        const data = await cutVideo(videoSrc, start, stop)
         return [new File([data], fileName),fileName]
+    }
+
+    const onAddIntervalClick = (index) => {
+        const ints = [...intervals];
+        const interval = ints.push({start:0,stop:video.duration})
+        setIntervals(ints);
+        setSelectedInterval(interval);
     }
 
     const onDeleteIntervalClick = (index) => {

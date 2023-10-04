@@ -23,7 +23,7 @@ async def create_session(request: Request, response: Response):
         return {"status": "ok"}
     except:
         session = sessions_manager.create()
-        response.set_cookie("session_id", session.id, max_age=3600*24*30, path="/", httponly=True)
+        response.set_cookie("session_id", session.id, max_age=3600*24*30, path="/", httponly=True, samesite="strict")
         return response.render(None)
 
 

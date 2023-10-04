@@ -59,7 +59,6 @@ class Session:
         :return: Результат запроса пользователя
         """
         if self.requests.get(request_id):
-            self.last_activity_time = time.time()
             return self.requests[request_id]["result"]
 
     def set_result(self, request_id, result):
