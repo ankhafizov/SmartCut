@@ -1,2 +1,4 @@
 fastapi[all]
 python-multipart
+kafka_python
+uuid

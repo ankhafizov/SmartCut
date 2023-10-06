@@ -1,5 +1,5 @@
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
-import {secsToTimeStr} from "../utils/utils.js";
+import {secsToTimeStr, timeout} from "../utils/utils.js";
 
 const ffmpeg = createFFmpeg({log: false});
 

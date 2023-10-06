@@ -1,89 +1,105 @@
 # Модуль для работы с плагинами
 from threading import Thread
-import time
+import os
+from json import dumps,loads
+from kafka import KafkaProducer, KafkaConsumer
+import logging
+from sessions import sessions_manager
 
-# Список активных плагинов
-plugins_list = [
-    {"plugin_name": "plugin1", "label": "плагин 1", "size": 640},
-    {"plugin_name": "plugin2", "label": "плагин 2", "size": 244}
-]
-
-# Список результатов обработки видео. В качестве ключей используются
-# идентификаторы запросов (uid)
-results = {}
-
-# Периодичность обновления списка активных плагинов
-UPDATE_PLUGINS_PERIOD = 5
-
-# Флаг, заставляющий остановить фоновую задачу обновления списка плагинов
+# Флаг, заставляющий остановить фоновую задачу чтения из Kafka
 stop_flag = False
 
 
-def get_plugins_list():
-    """
-    Возвращает список активных плагинов
-    :return:
-    """
-    return plugins_list
+class PluginsManager:
+    """Класс для взаимодействия с плагинами"""
 
-def update_plugins_list():
-    """
-    Функция обновления списка активных плагинов
-    Запускает процедуру обновления периодически
-    (Пока ничего не делает)
-    :return:
-    """
-    while True:
-        if (stop_flag):
-            return
-        time.sleep(UPDATE_PLUGINS_PERIOD)
+    def __init__(self):
+
+        # Список активных плагинов.
+        # Ключ - plugin_name
+        self.plugins = {}
+
+        # Продюсер Kafka для отправки сообщений плагинам
+        self.kafka_producer = KafkaProducer(
+            bootstrap_servers=os.getenv("KAFKA_BOOTSTRAP_SERVER"),
+            value_serializer=lambda x: dumps(x).encode("utf-8")
+        )
+
+        # Консьюмеры Kafka для получения сообщений от плагинов
+        self.kafka_start_plugins_consumer = KafkaConsumer("start-plugins",
+            bootstrap_servers=os.getenv("KAFKA_BOOTSTRAP_SERVER"),
+            value_deserializer=lambda x: loads(x.decode("utf-8")),
+            consumer_timeout_ms=int(os.getenv("KAFKA_POLL_PERIOD"))*1000
+        )
+        self.kafka_processed_files_consumer = KafkaConsumer("processed-files",
+            bootstrap_servers=os.getenv("KAFKA_BOOTSTRAP_SERVER"),
+            value_deserializer=lambda x: loads(x.decode("utf-8")),
+            consumer_timeout_ms=int(os.getenv("KAFKA_POLL_PERIOD"))*1000
+        )
+
+    def run(self):
+        """
+        Запускает фоновый поток постоянного
+        чтения сообщений из Kafka
+        :return:
+        """
+        Thread(target=self.__kafka_poll_start_plugins).start()
+        Thread(target=self.__kafka_poll_processed_files).start()
+
+    def stop(self):
+        """
+        Останавливает фоновый поток постоянного
+        чтения сообщений из Kafka
+        """
+        global stop_flag
+        stop_flag = True
+
+    def get_plugins(self):
+        """
+        Возвращает список активных плагинов
+        :return: Массив плагинов
+        """
+        return list(self.plugins.values())
+
+    def send_message(self, plugin_name, message):
+        """
+        Отправляет сообщение плагину через Kafka
+        :param plugin_name Имя плагина
+        :param message Сообщение
+        """
+        self.kafka_producer.send(plugin_name+"-new-files", message).get(1)
 
 
-thread = Thread(target=update_plugins_list)
+    def __kafka_poll_start_plugins(self):
+        """
+        Функция обновляет список плагинов из Kafka
+        """
+        while True:
+            if stop_flag:
+                break
+            try:
+                for message in self.kafka_start_plugins_consumer:
+                    if message.value.get("plugin_name"):
+                        self.plugins[message.value["plugin_name"]] = message.value
+            except Exception as e:
+                logging.error(e)
 
-def run_update_plugins_list():
-    """
-    Запускает фоновый поток постоянного
-    обновления списка активных плагинов
-    :return:
-    """
-    thread.start()
+    def __kafka_poll_processed_files(self):
+        """
+        Функция обновляет список результатов запросов пользователей из Kafka
+        """
+        while True:
+            if stop_flag:
+                break
+            try:
+                for message in self.kafka_processed_files_consumer:
+                    if message.value.get("user_request_uid"):
+                        session = sessions_manager.get(message.value.get("user_id"))
+                        if session is not None:
+                            session.set_result(message.value.get("user_request_uid"), message.value)
+                sessions_manager.clean_sessions()
+            except Exception as e:
+                logging.error(e)
 
 
-def stop_update_plugins_list():
-    """
-    Останавливет фоновый поток обновления списка
-    активных плагинов
-    :return:
-    """
-    global stop_flag
-    stop_flag = True
-
-
-def update_results():
-    """
-    Запрашивает результаты обработки видео запросов
-    и обновляет словарь "results"
-    (Пока ничего не делает)
-    """
-    pass
-
-
-def get_result(uid):
-    """
-    Возвращает результат обработки видео по указанному
-    идентификатору запроса
-    (Пока возвращает статические данные)
-    :param uid: Идентификатор запроса
-    :return:
-    """
-    return {
-        "user_id": "user_id1",
-        "video_name": "video_name1",
-        "plugin_name": "plugin1",
-        "timestamps": [
-            {"start": 10, "stop": 30},
-            {"start": 60, "stop": 90},
-            {"start": 120, "stop": 150}
-        ]
-}
+manager = PluginsManager()

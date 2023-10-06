@@ -1,1 +1,6 @@
-hydra-core
+# hydra-core
+# opencv-python
+# torch
+# torchvision
+# scipy
+# natsort
