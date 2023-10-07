@@ -1,3 +1,4 @@
 hydra-core
 Pillow
 opencv-python
+torch

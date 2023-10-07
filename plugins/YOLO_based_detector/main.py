@@ -3,9 +3,11 @@ import hydra
 
 from omegaconf import DictConfig
 
-from plugins.YOLO_based_detector.yolo_utils import init_yolo_model, process_chunk
-
 sys.path.append("..")
+
+
+from plugins.YOLO_based_detector.yolo_utils import init_yolo_model, merge_timestamps, process_chunk
+
 
 from plugins.common_utils.kafka_helpers import KafkaHelper  # noqa: E402
 
@@ -21,19 +23,23 @@ def main(config: DictConfig) -> None:
         input_img_size=config["plugin"]["img_size"],
     )
     model = init_yolo_model()
+    result_timestamps_list = []
 
     for message in kafka_helper.check_new_uploaded_videos():
         if message["status"] == "in-progress":
 
-            chunk_timestamps = process_chunk(model, config["zipped_chunk_path"], config["detect_class"], config["chunk_size"])
+            chunk_timestamps = process_chunk(model, config["zipped_chunk_path"], config["detect_class"], config["chunk_size"]) # получаем таймстемпы из каждого чанка
+            # черновой вариант, складываем результаты по чанкам в один список сюда
+            result_timestamps_list.extend(chunk_timestamps)
 
         elif message["status"] == "uploaded":
             # TODO code here
-            timestamps = [
-                {"start": 10, "stop": 30},
-                {"start": 60, "stop": 90},
-                {"start": 120, "stop": 150},
-            ]
+            timestamps = merge_timestamps(result_timestamps_list)
+            # timestamps = [
+            #     {"start": 10, "stop": 30},
+            #     {"start": 60, "stop": 90},
+            #     {"start": 120, "stop": 150},
+            # ]
 
             kafka_helper.send_processed_file_timestamps_info(
                 user_id=message["user_id"],

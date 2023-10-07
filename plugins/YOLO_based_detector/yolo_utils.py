@@ -31,5 +31,28 @@ def process_chunk(model, zipped_chank_path, detect_class, chunk_size):
                 detected_segments.append({"start": start_time, "stop": stop_time})
                 start_time = 0
                 stop_time = 0
-
+    # почистить память?
     return detected_segments
+
+def merge_timestamps(timestamps_list):    
+
+    timestamps_list.sort(key=lambda x: x['start'])
+
+    merged_results = []
+    start_time = timestamps_list[0]['start']
+    stop_time = timestamps_list[0]['stop']
+
+    for segment in timestamps_list[1:]:
+        if segment['start'] <= stop_time:
+            # обновление времени окончания, если текущий отрезок перекрывается с предыдущим
+            stop_time = max(stop_time, segment['stop'])
+        else:
+            # добавление объединенного отрезка времени в список результатов
+            merged_results.append({'start': start_time, 'stop': stop_time})
+            start_time = segment['start']
+            stop_time = segment['stop']
+
+    # добавление последнего объединенного отрезка времени в список результатов
+    merged_results.append({'start': start_time, 'stop': stop_time})
+
+    return merged_results
