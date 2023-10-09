@@ -27,8 +27,10 @@ def main(config: DictConfig) -> None:
 
     for message in kafka_helper.check_new_uploaded_videos():
         if message["status"] == "in-progress":
+            temp_data_folder = f"{config['plugin']['data_folder']}/"
+            zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
 
-            chunk_timestamps = process_chunk(model, config["zipped_chunk_path"], config["detect_class"], config["chunk_size"]) # получаем таймстемпы из каждого чанка
+            chunk_timestamps = process_chunk(model, zipped_chunks_path, config["detect_class"], config["chunk_size"]) # получаем таймстемпы из каждого чанка
             # черновой вариант, складываем результаты по чанкам в один список сюда
             result_timestamps_list.extend(chunk_timestamps)
 

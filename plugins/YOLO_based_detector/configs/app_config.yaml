@@ -11,7 +11,7 @@ hydra:  # настройки гидры
 
 plugin:
   name: "yolo_based_detector"
-  label: "детектор"
+  label: "yolo детектор"
   img_size: 256
   detect_class: 'car'
   chunk_size: 50
