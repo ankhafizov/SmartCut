@@ -40,10 +40,8 @@ export default function RequestForm(
                                     defaultValue=""
                                     value={plugin.value}
                                     onChange={(value) => setPlugin(pluginsList.find(it => it.value === value))}
+                                    onDropdownVisibleChange={()=>updatePluginsList()}
                                     options={pluginsList}
-                                />
-                                <Button title="Обновить" icon={<ReloadOutlined/>} size="small" type="link"
-                                        onClick={()=>updatePluginsList()}
                                 />
                             </div>
                         </td>
