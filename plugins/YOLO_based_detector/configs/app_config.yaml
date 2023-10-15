@@ -15,6 +15,8 @@ plugin:
   img_size: 256
   detect_class: 'car'
   chunk_size: 50
+  data_folder: /temp_data
+  img_extention: jpg
 
 kafka:
   bootstrap_servers : 127.0.0.1:9092

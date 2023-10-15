@@ -58,7 +58,7 @@ services:
       kafka:
         condition: service_healthy
     volumes:
-      - ./temp_data:/data
+      - ./temp_data:/temp_data
 
   zookeeper:
     image: wurstmeister/zookeeper

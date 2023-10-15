@@ -29,14 +29,13 @@ def main(config: DictConfig) -> None:
         if message["status"] == "in-progress":
             temp_data_folder = f"{config['plugin']['data_folder']}/"
             zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
+            print(temp_data_folder + message["last_zipped_chunk_path"])
 
-            chunk_timestamps = process_chunk(model, zipped_chunks_path, config["detect_class"], config["chunk_size"]) # получаем таймстемпы из каждого чанка
-            # черновой вариант, складываем результаты по чанкам в один список сюда
+            chunk_timestamps = process_chunk(model, zipped_chunks_path, config["plugin"]["detect_class"], config["plugin"]["chunk_size"]) 
             result_timestamps_list.extend(chunk_timestamps)
 
         elif message["status"] == "uploaded":
-            # TODO code here
-            timestamps = merge_timestamps(result_timestamps_list)
+            timestamps = merge_timestamps(chunk_timestamps)
             # timestamps = [
             #     {"start": 10, "stop": 30},
             #     {"start": 60, "stop": 90},
