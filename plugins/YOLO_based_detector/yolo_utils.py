@@ -1,44 +1,51 @@
+from glob import glob
 import torch
 import os
 import logging
+from natsort import natsorted
 from plugins.common_utils.common_helpers import unzip_archive
 
 def init_yolo_model():
     model = torch.hub.load("ultralytics/yolov5", "yolov5s")
     return model
 
-def process_chunk(model, zipped_chunks_path, detect_class, chunk_size):
+def process_chunk(model, zipped_chunks_path, detect_class):
 
     unpacked_content_path =  unzip_archive(zipped_chunks_path)
 
-    detected_segments = {}
+    detections = []
+    times_sec = []
 
-    for idx, img in enumerate(os.listdir(unpacked_content_path)):
-        detections = model(unpacked_content_path+'/'+img).pandas().xyxy[0]["name"].tolist()
+
+    for  img in natsorted(glob(f"{unpacked_content_path}/*.jpg")):
+
+        detections = model(img).pandas().xyxy[0]["name"].tolist()
+        timestamp = int(os.path.basename(img)[:-4])
+
         if detect_class in detections:
-            detected_segments[int(img[:-4])]=1
+            detections.append(1)
         else:
-            detected_segments[int(img[:-4])]=0
+            detections.append(0)
+        times_sec.append(timestamp)
         
-    return detected_segments
+    return detections, times_sec
 
-def merge_timestamps(timestamps_dict):   
 
-    myKeys = list(timestamps_dict.keys())
-    myKeys.sort()
-    sorted_dict = {i: timestamps_dict[i] for i in myKeys}
-
-    merged_results = []
-    start=0
-    end=0
-    prev=-1
-    for k,v in sorted_dict.items():
-        if v==1 and prev!=1:
-            start=k
-            prev=v
-        elif v==0:
-            end=k
-            merged_results.append({'start': start, 'end': end})
-            prev=v
-
-    return merged_results
+def merge_timestamps(lst, timestamps):
+    sequences = []
+    final_timestamps = []
+    start_index = None
+    
+    for i in range(len(lst)):
+        if lst[i] == 1:
+            if start_index is None:
+                start_index = i
+        elif start_index is not None:
+            sequences.append((start_index, i-1))
+            start_index = None
+    if start_index is not None:
+        sequences.append((start_index, len(lst)-1))
+        
+    for start, stop in sequences:
+        final_timestamps.append({'start': timestamps[start], 'stop': timestamps[stop]})
+    return final_timestamps

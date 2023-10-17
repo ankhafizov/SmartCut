@@ -1,3 +1,5 @@
+import logging
+import os
 import sys
 import hydra
 
@@ -23,19 +25,30 @@ def main(config: DictConfig) -> None:
         input_img_size=config["plugin"]["img_size"],
     )
     model = init_yolo_model()
+    result_detections_list = []
     result_timestamps_list = []
 
     for message in kafka_helper.check_new_uploaded_videos():
         if message["status"] == "in-progress":
             temp_data_folder = f"{config['plugin']['data_folder']}/"
             zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
-            print(temp_data_folder + message["last_zipped_chunk_path"])
 
-            chunk_timestamps = process_chunk(model, zipped_chunks_path, config["plugin"]["detect_class"], config["plugin"]["chunk_size"]) 
+            detections, chunk_timestamps = process_chunk(model, zipped_chunks_path, config["plugin"]["detect_class"]) 
+            result_detections_list.extend(detections)
             result_timestamps_list.extend(chunk_timestamps)
+            logging.error(result_timestamps_list)
+
+
+            kafka_helper.send_processed_chunk_notification( 
+                user_id=message["user_id"],
+                processed_zipped_chunk_path=message["last_zipped_chunk_path"],
+            )
+
+            os.remove(zipped_chunks_path) 
+
 
         elif message["status"] == "uploaded":
-            timestamps = merge_timestamps(chunk_timestamps)
+            timestamps = merge_timestamps(result_detections_list, result_timestamps_list)
             # timestamps = [
             #     {"start": 10, "stop": 30},
             #     {"start": 60, "stop": 90},

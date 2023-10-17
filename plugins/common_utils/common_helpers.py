@@ -20,7 +20,6 @@ def unzip_archive(path_to_archive: str) -> str:
     path_to_unpacked_content = path_to_archive.replace(basename_archive, "")
     shutil.unpack_archive(path_to_archive, path_to_unpacked_content)
     logging.info(f"unpacked archive {path_to_archive} to {path_to_unpacked_content}")
-    os.remove(path_to_archive)
 
 
     return path_to_unpacked_content
