@@ -9,7 +9,7 @@ sys.path.append("..")
 
 
 from plugins.YOLO_based_detector.yolo_utils import init_yolo_model, merge_timestamps, process_chunk
-
+from plugins.common_utils.common_helpers import unzip_archive
 
 from plugins.common_utils.kafka_helpers import KafkaHelper  # noqa: E402
 
@@ -32,11 +32,15 @@ def main(config: DictConfig) -> None:
         if message["status"] == "in-progress":
             temp_data_folder = f"{config['plugin']['data_folder']}/"
             zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
+            unpacked_content_path =  unzip_archive(zipped_chunks_path)
+            os.remove(zipped_chunks_path) 
 
-            detections, chunk_timestamps = process_chunk(model, zipped_chunks_path, config["plugin"]["detect_class"]) 
+
+
+            detections, chunk_timestamps = process_chunk(model, unpacked_content_path, config["plugin"]["detect_class"]) 
             result_detections_list.extend(detections)
             result_timestamps_list.extend(chunk_timestamps)
-            logging.error(result_timestamps_list)
+            logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
 
 
             kafka_helper.send_processed_chunk_notification( 
@@ -44,7 +48,6 @@ def main(config: DictConfig) -> None:
                 processed_zipped_chunk_path=message["last_zipped_chunk_path"],
             )
 
-            os.remove(zipped_chunks_path) 
 
 
         elif message["status"] == "uploaded":

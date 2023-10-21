@@ -9,9 +9,8 @@ def init_yolo_model():
     model = torch.hub.load("ultralytics/yolov5", "yolov5s")
     return model
 
-def process_chunk(model, zipped_chunks_path, detect_class):
+def process_chunk(model, unpacked_content_path, detect_class):
 
-    unpacked_content_path =  unzip_archive(zipped_chunks_path)
 
     detections = []
     times_sec = []
@@ -19,10 +18,10 @@ def process_chunk(model, zipped_chunks_path, detect_class):
 
     for  img in natsorted(glob(f"{unpacked_content_path}/*.jpg")):
 
-        detections = model(img).pandas().xyxy[0]["name"].tolist()
+        detect = model(img).pandas().xyxy[0]["name"].tolist()
         timestamp = int(os.path.basename(img)[:-4])
 
-        if detect_class in detections:
+        if detect_class in detect:
             detections.append(1)
         else:
             detections.append(0)

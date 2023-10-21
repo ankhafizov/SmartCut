@@ -19,4 +19,4 @@ plugin:
   img_extention: jpg
 
 kafka:
-  bootstrap_servers : 127.0.0.1:9092
+  bootstrap_servers : kafka:29092
