@@ -1,10 +1,4 @@
 hydra-core
-Pillow
-opencv-python
 torch
-pandas
-requests
-seaborn
-scipy
 numpy
 ultralytics

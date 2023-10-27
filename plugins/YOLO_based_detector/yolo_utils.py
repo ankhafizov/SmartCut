@@ -1,9 +1,7 @@
 from glob import glob
 import torch
 import os
-import logging
 from natsort import natsorted
-from plugins.common_utils.common_helpers import unzip_archive
 
 def init_yolo_model():
     model = torch.hub.load("ultralytics/yolov5", "yolov5s")
@@ -26,6 +24,7 @@ def process_chunk(model, unpacked_content_path, detect_class):
         else:
             detections.append(0)
         times_sec.append(timestamp)
+        os.remove(img)
         
     return detections, times_sec
 

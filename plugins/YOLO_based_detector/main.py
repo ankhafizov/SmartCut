@@ -25,22 +25,29 @@ def main(config: DictConfig) -> None:
         input_img_size=config["plugin"]["img_size"],
     )
     model = init_yolo_model()
-    result_detections_list = []
-    result_timestamps_list = []
+    result_dict = {}
 
     for message in kafka_helper.check_new_uploaded_videos():
         if message["status"] == "in-progress":
             temp_data_folder = f"{config['plugin']['data_folder']}/"
             zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
+
+            req_id = (message["last_zipped_chunk_path"].split('/'))[0]
+            result_dict[req_id]={}
+            result_dict[req_id]['result_detection_list']=[]
+            result_dict[req_id]['result_timestamps_list']=[]
+
             unpacked_content_path =  unzip_archive(zipped_chunks_path)
+            
             os.remove(zipped_chunks_path) 
 
-
-
             detections, chunk_timestamps = process_chunk(model, unpacked_content_path, config["plugin"]["detect_class"]) 
-            result_detections_list.extend(detections)
-            result_timestamps_list.extend(chunk_timestamps)
+
+            result_dict[req_id]['result_detection_list'].extend(detections)
+            result_dict[req_id]['result_timestamps_list'].extend(chunk_timestamps)
+
             logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
+            
 
 
             kafka_helper.send_processed_chunk_notification( 
@@ -51,7 +58,7 @@ def main(config: DictConfig) -> None:
 
 
         elif message["status"] == "uploaded":
-            timestamps = merge_timestamps(result_detections_list, result_timestamps_list)
+            result_dict[req_id]['timestamps'] = merge_timestamps(result_dict[req_id]['result_detection_list'], result_dict[req_id]['result_timestamps_list'])
             # timestamps = [
             #     {"start": 10, "stop": 30},
             #     {"start": 60, "stop": 90},
@@ -60,11 +67,10 @@ def main(config: DictConfig) -> None:
 
             kafka_helper.send_processed_file_timestamps_info(
                 user_id=message["user_id"],
-                timestamps=timestamps,
+                timestamps=result_dict[req_id]['timestamps'],
                 zipped_chunks_path=message["zipped_chunks_path"],
             )
 
-            pass
         else:
             raise ValueError("Unknown received message status")
 

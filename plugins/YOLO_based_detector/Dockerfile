@@ -5,8 +5,6 @@ RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
 RUN pip3 install --upgrade pip
 RUN pip3 install torchvision
 RUN pip3 install hydra-core
-RUN pip3 install opencv-python
-RUN pip3 install scipy
 RUN pip3 install natsort
 RUN pip3 install ultralytics
 RUN pip3 install kafka-python
