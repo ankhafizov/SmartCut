@@ -2,6 +2,7 @@ import logging
 import os
 import sys
 import hydra
+import shutil
 
 from omegaconf import DictConfig
 
@@ -58,18 +59,18 @@ def main(config: DictConfig) -> None:
 
 
         elif message["status"] == "uploaded":
+            req_id = (message["zipped_chunks_path"].split('/'))[0]
+
             result_dict[req_id]['timestamps'] = merge_timestamps(result_dict[req_id]['result_detection_list'], result_dict[req_id]['result_timestamps_list'])
-            # timestamps = [
-            #     {"start": 10, "stop": 30},
-            #     {"start": 60, "stop": 90},
-            #     {"start": 120, "stop": 150},
-            # ]
 
             kafka_helper.send_processed_file_timestamps_info(
                 user_id=message["user_id"],
                 timestamps=result_dict[req_id]['timestamps'],
                 zipped_chunks_path=message["zipped_chunks_path"],
             )
+
+            del result_dict[req_id]
+            shutil.rmtree(unpacked_content_path)
 
         else:
             raise ValueError("Unknown received message status")
