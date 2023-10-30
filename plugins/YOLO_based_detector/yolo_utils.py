@@ -5,6 +5,7 @@ from natsort import natsorted
 
 def init_yolo_model():
     model = torch.hub.load("ultralytics/yolov5", "yolov5s")
+    model.conf=0.6
     return model
 
 def process_chunk(model, unpacked_content_path, detect_class):
@@ -45,5 +46,5 @@ def merge_timestamps(lst, timestamps):
         sequences.append((start_index, len(lst)-1))
         
     for start, stop in sequences:
-        final_timestamps.append({'start': timestamps[start], 'stop': timestamps[stop]})
+        final_timestamps.append({'start': timestamps[start] - (0 if timestamps[start]==0 else 5 ), 'stop': timestamps[stop]})
     return final_timestamps

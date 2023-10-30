@@ -32,11 +32,12 @@ def main(config: DictConfig) -> None:
         if message["status"] == "in-progress":
             temp_data_folder = f"{config['plugin']['data_folder']}/"
             zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
-
             req_id = (message["last_zipped_chunk_path"].split('/'))[0]
-            result_dict[req_id]={}
-            result_dict[req_id]['result_detection_list']=[]
-            result_dict[req_id]['result_timestamps_list']=[]
+
+            if not req_id in result_dict:
+                result_dict[req_id]={}
+                result_dict[req_id]['result_detection_list']=[]
+                result_dict[req_id]['result_timestamps_list']=[]
 
             unpacked_content_path =  unzip_archive(zipped_chunks_path)
             
@@ -70,7 +71,7 @@ def main(config: DictConfig) -> None:
             )
 
             del result_dict[req_id]
-            shutil.rmtree(unpacked_content_path)
+            shutil.rmtree(os.path.join(temp_data_folder,req_id))
 
         else:
             raise ValueError("Unknown received message status")
