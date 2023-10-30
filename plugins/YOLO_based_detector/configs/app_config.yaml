@@ -1,0 +1,22 @@
+defaults:  # настройки гидры
+  - _self_  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: custom  
+
+hydra:  # настройки гидры
+  output_subdir: null  
+  run:  
+    dir: .
+
+
+plugin:
+  name: "yolo_based_detector"
+  label: "yolo детектор"
+  img_size: 256
+  detect_class: 'car'
+  chunk_size: 50
+  data_folder: /temp_data
+  img_extention: jpg
+
+kafka:
+  bootstrap_servers : kafka:29092

@@ -1,7 +1,7 @@
 FROM node:16 AS builder
-COPY app/package.json app/package-lock.json .
+COPY app/package.json app/package-lock.json ./
 RUN npm install
-COPY app/ .
+COPY app/ ./
 RUN npm run build
 
 FROM nginx

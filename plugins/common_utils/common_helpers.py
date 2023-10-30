@@ -21,4 +21,5 @@ def unzip_archive(path_to_archive: str) -> str:
     shutil.unpack_archive(path_to_archive, path_to_unpacked_content)
     logging.info(f"unpacked archive {path_to_archive} to {path_to_unpacked_content}")
 
+
     return path_to_unpacked_content

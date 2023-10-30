@@ -1,0 +1,4 @@
+hydra-core
+torch
+numpy
+ultralytics
