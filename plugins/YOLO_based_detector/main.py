@@ -25,12 +25,14 @@ def main(config: DictConfig) -> None:
         plugin_label=config["plugin"]["label"],
         input_img_size=config["plugin"]["img_size"],
     )
+
     model = init_yolo_model()
+    
+    temp_data_folder = f"{config['plugin']['data_folder']}/"
     result_dict = {}
 
     for message in kafka_helper.check_new_uploaded_videos():
         if message["status"] == "in-progress":
-            temp_data_folder = f"{config['plugin']['data_folder']}/"
             zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
             req_id = (message["last_zipped_chunk_path"].split('/'))[0]
 
