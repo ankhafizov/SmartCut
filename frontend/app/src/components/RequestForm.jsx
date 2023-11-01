@@ -185,7 +185,7 @@ export default function RequestForm(
             } else if (response.status !== 404) {
                 return
             }
-            await timeout(5000);
+            await timeout(2000);
         }
     }
 

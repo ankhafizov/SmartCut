@@ -18,3 +18,13 @@ def save_file(path, filename, file):
         os.makedirs(os.path.join(STORAGE_ROOT, path))
     with open(os.path.join(STORAGE_ROOT, path, filename), "wb") as buffer:
         shutil.copyfileobj(file, buffer)
+
+
+def remove_folder(path):
+    """
+    Удаляет указанную папку из хранилища
+    вместе со всем содержимым
+    :param path: Путь к папке относительно корня
+    """
+    if os.path.isdir(os.path.join(STORAGE_ROOT, path)):
+        shutil.rmtree(os.path.join(STORAGE_ROOT, path), ignore_errors=True)

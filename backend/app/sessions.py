@@ -1,6 +1,7 @@
 from uuid import uuid4
 import os
 import time
+from storage import remove_folder
 
 
 class Session:
@@ -33,7 +34,6 @@ class Session:
         self.requests[request_id] = {"result": None, "last_activity_time": time.time(),"processed_chunks": 0}
         return self.requests[request_id]
 
-
     def delete_request(self, request_id):
         """
         Удаляет запрос из списка
@@ -41,6 +41,7 @@ class Session:
         """
         self.last_activity_time = time.time()
         del self.requests[request_id]
+        remove_folder(request_id)
 
     def get_request(self, request_id):
         """
@@ -70,7 +71,7 @@ class Session:
         if self.requests.get(request_id):
             self.last_activity_time = time.time()
             self.requests[request_id]["last_activity_time"] = time.time()
-            if result.get("timestamps"):
+            if "timestamps" in result:
                 self.requests[request_id]["result"] = result
             elif result.get("processed_chunk"):
                 self.requests[request_id]["processed_chunks"] += 1

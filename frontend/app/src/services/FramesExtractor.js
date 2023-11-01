@@ -99,7 +99,7 @@ export default function FramesExtractor() {
     this.addFileToZip = () => {
         return new Promise(async(resolve) => {
             const jpeg = await this.getJpeg();
-            this.zip.file(this.video.currentTime+".jpg",jpeg);
+            this.zip.file(parseInt(this.video.currentTime)+".jpg",jpeg);
             resolve();
         });
     }
