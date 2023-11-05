@@ -2,10 +2,11 @@ import sys
 import os
 import hydra
 from glob import glob
-import cv2
 import numpy as np
 from omegaconf import DictConfig
 import logging
+from PIL import Image
+import shutil
 
 sys.path.append("..")
 
@@ -30,8 +31,10 @@ def main(config: DictConfig) -> None:
 
     temp_data_folder = f"{config['plugin']['data_folder']}/"
 
-    for message in kafka_helper.check_new_uploaded_videos(): # сначала загружаем вообще все, превращаем в вектора, затем вообще по всем векторам считаем среднее
-        if message["status"] == "in-progress": #пока загружается обрабатываем чанки
+    # сначала загружаем вообще все, превращаем в вектора, затем вообще по всем векторам считаем среднее
+    for message in kafka_helper.check_new_uploaded_videos():
+        if message["status"] == "in-progress":
+            # пока загружается обрабатываем чанки
             zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
             dst_path = unzip_archive(zipped_chunks_path)
 
@@ -41,21 +44,29 @@ def main(config: DictConfig) -> None:
                 if not os.path.isfile(img_path.replace(config["plugin"]["img_extention"], "npy"))
             ]
 
-            logging.info(f"processing {len(img_paths_to_process)} files in {dst_path}")# логируем сколько обработали и сколько осталось
+            # логируем сколько обработали и сколько осталось
+            logging.info(f"processing {len(img_paths_to_process)} files in {dst_path}")
             for img_path in img_paths_to_process:
-                img_bgr = cv2.imread(img_path)
-                img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
-                feature_vector = feature_extractor.extract_feature_vector(img_rgb) # извлекаем фича вектор
-                np.save(img_path.replace(".jpg", ".npy"), feature_vector) # заменяем картинку на фича вектор
+                try:
+                    img = Image.open(img_path)
+                    # извлекаем фича вектор
+                    feature_vector = feature_extractor.extract_feature_vector(img)
+                    # заменяем картинку на фича вектор
+                    np.save(img_path.replace(".jpg", ".npy"), feature_vector)
+                except Exception as e:
+                    logging.error(f"Could not process image {img_path}. Error: {e}")
             logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
 
-            kafka_helper.send_processed_chunk_notification( # отправляем инфу о том что обработали чанк
+            # отправляем инфу о том что обработали чанк
+            kafka_helper.send_processed_chunk_notification(
                 user_id=message["user_id"],
                 processed_zipped_chunk_path=message["last_zipped_chunk_path"],
             )
 
-            os.remove(zipped_chunks_path) # удаляем этот чанк
-        elif message["status"] == "uploaded": # если все видео уже обработано
+            # удаляем этот чанк
+            os.remove(zipped_chunks_path)
+        # если все видео уже обработано
+        elif message["status"] == "uploaded":
             timestamps = timestamp_extractor.get_events_timestamps(
                 temp_data_folder + message["zipped_chunks_path"]
             )
@@ -66,7 +77,8 @@ def main(config: DictConfig) -> None:
                 zipped_chunks_path=message["zipped_chunks_path"],
             )
 
-            pass
+            req_id = (message["zipped_chunks_path"].split('/'))[0]
+            shutil.rmtree(os.path.join(temp_data_folder, req_id))
         else:
             raise ValueError("Unknown received message status")
 

@@ -107,8 +107,6 @@ async def upload_zip(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
-
 @app.get("/api/get_video_intervals/{uid}")
 async def get_video_intervals(uid, request: Request):
     """

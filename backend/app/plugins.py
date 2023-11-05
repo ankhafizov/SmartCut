@@ -69,7 +69,6 @@ class PluginsManager:
         """
         self.kafka_producer.send(plugin_name+"-new-files", message).get(1)
 
-
     def __kafka_poll_start_plugins(self):
         """
         Функция обновляет список плагинов из Kafka

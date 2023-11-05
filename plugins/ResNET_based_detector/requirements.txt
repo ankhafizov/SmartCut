@@ -1,6 +1,5 @@
 # hydra-core
-# opencv-python
-# torch
-# torchvision
 # scipy
 # natsort
+# pillow
+# onnxruntime
