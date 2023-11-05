@@ -7,6 +7,7 @@ from omegaconf import DictConfig
 import logging
 from PIL import Image
 import shutil
+import time
 
 sys.path.append("..")
 
@@ -23,12 +24,11 @@ def main(config: DictConfig) -> None:
     )
     feature_extractor = FeatureExtractor(config["feature_extractor_node"])
     timestamp_extractor = TimestampExtractor(config["timestamp_extractor"])
-
+    time.sleep(3)
     kafka_helper.send_plugin_init_message(
         plugin_label=config["plugin"]["label"],
         input_img_size=config["plugin"]["img_size"],
     )
-
     temp_data_folder = f"{config['plugin']['data_folder']}/"
 
     # сначала загружаем вообще все, превращаем в вектора, затем вообще по всем векторам считаем среднее

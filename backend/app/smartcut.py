@@ -125,12 +125,4 @@ async def get_video_intervals(uid, request: Request):
     return result
 
 
-@app.on_event('shutdown')
-def shutdown_event():
-    """
-    При завершении работы FastAPI, завершает все остальные фоновые процессы
-    """
-    manager.stop()
-
-
 main()
