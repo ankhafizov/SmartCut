@@ -6,6 +6,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        SAMPLE_VIDEO_URL: https://disk.yandex.ru/d/kNcP0WwyOG8BIQ
     restart: always
     ports:
       - 8085:8080
