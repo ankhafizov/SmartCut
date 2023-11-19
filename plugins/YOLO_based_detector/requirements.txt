@@ -2,3 +2,5 @@ hydra-core
 torch
 numpy
 ultralytics
+onnxruntime
+torchvision
