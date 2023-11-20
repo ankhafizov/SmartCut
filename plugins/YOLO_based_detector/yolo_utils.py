@@ -37,12 +37,12 @@ def process_chunk(session, unpacked_content_path, detect_class):
         img = preprocess_img(img_path)
         outputs = session.run(['output0'], {"images": img})
         output = torch.from_numpy(outputs[0])
-        out = non_max_suppression(prediction=output, conf_thres=0.7, iou_thres=0.5)
+        out = non_max_suppression(prediction=output, conf_thres=0.2, iou_thres=0.5)
 
         detect = out[0][:, 5].cpu().detach().numpy()
         timestamp = int(os.path.basename(img_path)[:-4])
 
-        if detect_class in detect:
+        if list(set(detect_class) & (set(detect))) != []:
             detections.append(1)
         else:
             detections.append(0)
