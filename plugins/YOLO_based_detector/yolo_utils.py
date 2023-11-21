@@ -1,6 +1,4 @@
 from glob import glob
-from plugins.YOLO_based_detector.nms import non_max_suppression
-import torch
 import os
 from natsort import natsorted
 import onnxruntime as ort
@@ -29,17 +27,18 @@ def preprocess_img(image_path):
     return img
 
 
-def process_chunk(session, unpacked_content_path, detect_class):
+def process_chunk(session, unpacked_content_path, detect_class, conf_thres=0.2):
+
     detections = []
     times_sec = []
 
     for img_path in natsorted(glob(f"{unpacked_content_path}/*.jpg")):
+
         img = preprocess_img(img_path)
         outputs = session.run(['output0'], {"images": img})
-        output = torch.from_numpy(outputs[0])
-        out = non_max_suppression(prediction=output, conf_thres=0.2, iou_thres=0.5)
-
-        detect = out[0][:, 5].cpu().detach().numpy()
+        scores = outputs[0][:, :, 4:5] * outputs[0][:, :, 5:]
+        mask = scores > conf_thres
+        detect = set(np.argmax(scores * mask, axis=2)[0])
         timestamp = int(os.path.basename(img_path)[:-4])
 
         if list(set(detect_class) & (set(detect))) != []:
