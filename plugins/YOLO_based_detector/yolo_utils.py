@@ -1,9 +1,11 @@
-from glob import glob
 import os
+from glob import glob
 from natsort import natsorted
-import onnxruntime as ort
-import numpy as np
+
+
 import cv2
+import numpy as np
+import onnxruntime as ort
 
 
 def init_yolo_model():
