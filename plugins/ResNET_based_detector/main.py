@@ -36,35 +36,39 @@ def main(config: DictConfig) -> None:
         if message["status"] == "in-progress":
             # пока загружается обрабатываем чанки
             zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
-            dst_path = unzip_archive(zipped_chunks_path)
+            try:
+                dst_path = unzip_archive(zipped_chunks_path)
 
-            img_paths_to_process = [
-                img_path
-                for img_path in glob(f"{dst_path}/*{config['plugin']['img_extention']}")
-                if not os.path.isfile(img_path.replace(config["plugin"]["img_extention"], "npy"))
-            ]
+                img_paths_to_process = [
+                    img_path
+                    for img_path in glob(f"{dst_path}/*{config['plugin']['img_extention']}")
+                    if not os.path.isfile(img_path.replace(config["plugin"]["img_extention"], "npy"))
+                ]
 
-            # логируем сколько обработали и сколько осталось
-            logging.info(f"processing {len(img_paths_to_process)} files in {dst_path}")
-            for img_path in img_paths_to_process:
-                try:
-                    img = Image.open(img_path)
-                    # извлекаем фича вектор
-                    feature_vector = feature_extractor.extract_feature_vector(img)
-                    # заменяем картинку на фича вектор
-                    np.save(img_path.replace(".jpg", ".npy"), feature_vector)
-                except Exception as e:
-                    logging.error(f"Could not process image {img_path}. Error: {e}")
-            logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
-
-            # отправляем инфу о том что обработали чанк
-            kafka_helper.send_processed_chunk_notification(
-                user_id=message["user_id"],
-                processed_zipped_chunk_path=message["last_zipped_chunk_path"],
-            )
-
-            # удаляем этот чанк
-            os.remove(zipped_chunks_path)
+                # логируем сколько обработали и сколько осталось
+                logging.info(f"processing {len(img_paths_to_process)} files in {dst_path}")
+                for img_path in img_paths_to_process:
+                    try:
+                        img = Image.open(img_path)
+                        # извлекаем фича вектор
+                        feature_vector = feature_extractor.extract_feature_vector(img)
+                        # заменяем картинку на фича вектор
+                        np.save(img_path.replace(".jpg", ".npy"), feature_vector)
+                        # отправляем инфу о том что обработали чанк
+                        kafka_helper.send_processed_chunk_notification(
+                            user_id=message["user_id"],
+                            processed_zipped_chunk_path=message["last_zipped_chunk_path"],
+                        )
+                    except Exception as e:
+                        logging.error(f"Could not process image {img_path}, error: {str(e)}")
+            except Exception as e:
+                logging.error(f"could not process {zipped_chunks_path}, error: {str(e)}")
+                pass
+            finally:
+                # удаляем этот чанк
+                logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
+                if os.path.isfile(zipped_chunks_path):
+                    os.remove(zipped_chunks_path)
         # если все видео уже обработано
         elif message["status"] == "uploaded":
             timestamps = timestamp_extractor.get_events_timestamps(

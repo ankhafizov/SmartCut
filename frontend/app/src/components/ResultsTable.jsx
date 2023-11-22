@@ -152,12 +152,7 @@ export default function ResultsTable(
             }
         })
         setModalOpen(false);
-        const a = document.createElement("a");
-        a.download = "intervals.zip"
-        a.href = URL.createObjectURL(blob);
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+        downloadBlob(blob,"intervals.zip");
     }
 
     const downloadInterval = async(start, stop) => {
@@ -165,11 +160,15 @@ export default function ResultsTable(
         setProgressModalTitle("");
         setDownloadPercent(0);
         const [blob, fileName] = await cutVideoInterval(start, stop);
+        setModalOpen(false);
+        downloadBlob(blob, fileName);
+    }
+
+    const downloadBlob = (blob, fileName) => {
         const a = document.createElement("a");
         a.download = fileName
         a.href = URL.createObjectURL(blob);
         setDownloadPercent(100);
-        setModalOpen(false);
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -184,7 +183,7 @@ export default function ResultsTable(
         return [new File([data], fileName),fileName]
     }
 
-    const onAddIntervalClick = (index) => {
+    const onAddIntervalClick = () => {
         const ints = [...intervals];
         const interval = ints.push({start:0,stop:video.duration})
         setIntervals(ints);
