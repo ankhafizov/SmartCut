@@ -1,4 +1,6 @@
 FROM node:16 AS builder
+ARG SAMPLE_VIDEO_URL
+RUN echo SMARTCUT_SAMPLE_VIDEO_URL=$SAMPLE_VIDEO_URL > ./.env
 COPY app/package.json app/package-lock.json ./
 RUN npm install
 COPY app/ ./

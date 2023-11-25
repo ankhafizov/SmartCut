@@ -2,15 +2,21 @@ from uuid import uuid4
 import os
 import time
 from storage import remove_folder
+from threading import Thread
+import logging
 
 
 class Session:
     """
     Сеанс пользователя
     """
-    def __init__(self):
+    def __init__(self, ip):
         # Идентификатор сеанса
         self.id = str(uuid4())
+
+        # IP-адрес клиента
+        self.ip = ip
+
         # Список активных запросов
         # Ключ: user_request_uid
         self.requests = {}
@@ -31,7 +37,11 @@ class Session:
         if request:
             return request
         self.last_activity_time = time.time()
-        self.requests[request_id] = {"result": None, "last_activity_time": time.time(),"processed_chunks": 0}
+        self.requests[request_id] = {
+            "result": None,
+            "last_activity_time": time.time(),
+            "processed_chunks": 0
+        }
         return self.requests[request_id]
 
     def delete_request(self, request_id):
@@ -75,6 +85,15 @@ class Session:
                 self.requests[request_id]["result"] = result
             elif result.get("processed_chunk"):
                 self.requests[request_id]["processed_chunks"] += 1
+                
+    def report_request_activity(self, request_id):
+        """
+        Обновляет время последней активности запроса
+        :param request_id: Идентификатор запроса
+        """
+        if self.requests.get(request_id):
+            self.last_activity_time = time.time()
+            self.requests[request_id]["last_activity_time"] = time.time()
 
 
 class SessionsManager:
@@ -91,13 +110,26 @@ class SessionsManager:
         # Максимальное время хранения результата запроса
         self.result_timeout = int(os.getenv("RESULT_TIMEOUT"))
 
-    def create(self):
+    def run(self):
+        """
+        Запускает фоновый поток постоянной
+        проверки сеансов пользователей
+        :return:
+        """
+        Thread(target=self.__clean_sessions).start()
+        
+    def create(self, ip):
         """
         Создает сеанс пользователя
+        или если уже есть сеанс с таким IP-адресом,
+        то возвращает его
+        :param ip: IP-адрес клиента
         :return: Сеанс пользователя
         """
-        session = Session()
-        self.sessions[session.id] = session
+        session = self.get_by_ip(ip)
+        if session is None:
+            session = Session(ip)
+            self.sessions[session.id] = session
         return session
 
     def get(self, session_id):
@@ -111,6 +143,17 @@ class SessionsManager:
             session.last_activity_time = time.time()
             return session
 
+    def get_by_ip(self, ip):
+        """
+        Выполняет поиск сеанса с указанным IP-адресом
+        то возвращает его
+        :param ip: IP-адрес клиента
+        :return: Сеанс пользователя
+        """
+        for session in self.sessions.values():
+            if session.ip == ip:
+                return session
+
     def delete(self, session_id):
         """
         Удаляет сеанс пользователя с указанным идентификатором
@@ -118,18 +161,23 @@ class SessionsManager:
         """
         del self.sessions[session_id]
 
-    def clean_sessions(self):
+    def __clean_sessions(self):
         """
         Удаляет неактивные сеансы и запросы
         для которых не поступили результаты
         """
-        for session_id in list(self.sessions):
-            if time.time() - self.sessions[session_id].last_activity_time > self.session_timeout:
-                self.delete(session_id)
-            else:
-                self.clean_session_requests(self.sessions[session_id])
+        while True:
+            try:
+                for session_id in list(self.sessions):
+                    if time.time() - self.sessions[session_id].last_activity_time > self.session_timeout:
+                        self.delete(session_id)
+                    else:
+                        self.__clean_session_requests(self.sessions[session_id])
+            except Exception as e:
+                logging.error(f"Sessions cleanup error: {str(e)}")
+            time.sleep(5)
 
-    def clean_session_requests(self, session):
+    def __clean_session_requests(self, session):
         """
         Удаляет неактивные запросы из указанного сеанса
         :param session: Сеанс пользователя

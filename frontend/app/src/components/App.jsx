@@ -51,6 +51,14 @@ function App() {
                         Загрузить видео
                     </Button>
                 </div>
+                {import.meta.env.SMARTCUT_SAMPLE_VIDEO_URL && !videoSrc &&
+                    <>
+                        <br/>
+                        <a target="_blank" href={import.meta.env.SMARTCUT_SAMPLE_VIDEO_URL}>
+                            Пример видео
+                        </a>
+                    </>
+                }
                 <video preload="auto" id="inputVideo" src={videoSrc}/><br/>
                 {videoSrc && renderVideoControlPanel()}
             </>
