@@ -1,3 +1,2 @@
-hydra-core
 scipy
 pillow
