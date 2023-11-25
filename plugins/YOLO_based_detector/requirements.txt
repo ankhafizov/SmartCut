@@ -1,4 +1,3 @@
-hydra-core
-torch
 numpy
-ultralytics
+kafka-python
+opencv-python

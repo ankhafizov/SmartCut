@@ -1,2 +1,4 @@
 kafka_python
 PyYAML
+natsort
+onnxruntime
