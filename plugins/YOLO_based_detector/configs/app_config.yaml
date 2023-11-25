@@ -13,7 +13,7 @@ plugin:
   name: "yolo_based_detector"
   label: "yolo детектор"
   img_size: 256
-  detect_class: 'car'
+  detect_class: [3, 9] #elephant, tiger in custom dataset
   chunk_size: 50
   data_folder: /temp_data
   img_extention: jpg
