@@ -24,7 +24,7 @@ def main(config: DictConfig) -> None:
     )
     feature_extractor = FeatureExtractor(config["feature_extractor_node"])
     timestamp_extractor = TimestampExtractor(config["timestamp_extractor"])
-    time.sleep(3)
+
     kafka_helper.send_plugin_init_message(
         plugin_label=config["plugin"]["label"],
         input_img_size=config["plugin"]["img_size"],

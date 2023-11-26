@@ -12,7 +12,8 @@ services:
     ports:
       - 8085:8080
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
   backend:
     container_name: backend
@@ -32,6 +33,11 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "http://localhost:8080/api/auth"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   resnet_based_detector_plugin:
     container_name: resnet_based_detector_plugin
@@ -43,6 +49,8 @@ services:
       bootstrap_servers: kafka:29092
     depends_on:
       kafka:
+        condition: service_healthy
+      backend:
         condition: service_healthy
     volumes:
       - ./temp_data:/temp_data
@@ -58,6 +66,9 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
+      backend:
+        condition: service_healthy
+
     volumes:
       - ./temp_data:/temp_data
 
