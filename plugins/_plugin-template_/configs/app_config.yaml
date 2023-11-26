@@ -1,0 +1,30 @@
+defaults:  # настройки гидры
+  - _self_  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: custom  
+
+hydra:  # настройки гидры
+  output_subdir: null  
+  run:  
+    dir: .
+
+feature_extractor_node:
+  weights : resnet-18 # resnet-18, resnet-34, resnet-50
+  input_shape : 224
+  normalize_mean : [0.485, 0.456, 0.406]
+  normalize_std : [0.229, 0.224, 0.225]
+
+timestamp_extractor:
+  std_scaling_param: 1 # коэф чувствиетельности к анномалиям (1: 32% событий – 2: 5% событий – 99.7: 0.3% событий)
+  min_pair_resolution_secs: 15
+  min_pair_length_secs: 10
+
+plugin:
+  name: "resnet_based_detector"
+  label: "детектор аномалий"
+  img_size: 256
+  data_folder: /temp_data
+  img_extention: jpg
+
+kafka:
+  bootstrap_servers : kafka:29092
