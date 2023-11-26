@@ -11,8 +11,18 @@ class TimestampExtractor:
         self.min_pair_length_secs = config["min_pair_length_secs"]
         self.std_scaling_param = config["std_scaling_param"]
 
-    def get_events_timestamps(self, folder_with_npy_vectors_path):
-        # << PASTE/CUSTOMIZE YOUR CODE HERE >>
+    def get_events_timestamps(self, folder_with_npy_vectors_path: str) -> list[dict[str, int]]:
+        """Получает таймстампы начал и концов отрезков в секундах из анализа feature-векторов
+
+        Args:
+            folder_with_npy_vectors_path (str): путь до папки с .npy файлами feature-векторов
+                (/temp_data/.....)
+
+        Returns:
+            list[dict[str, int]]: временные отрезки. Например:
+                [{"start": 10, "stop": 15}, {"start": 70, "stop": 95}, ....]
+        """
+        # << ДОПИСАТЬ КОД ЗДЕСЬ >>
 
         mean_vec = self._calc_mean_vec(folder_with_npy_vectors_path)
         cos_similarities, timestamps = self._calc_cos_similarities_to_timestamps(
@@ -37,6 +47,7 @@ class TimestampExtractor:
         ]
 
     def _calc_mean_vec(self, folder_with_npy_vectors_path):
+        # << ОПЦИОНАЛЬНЫЙ ВНУТРЕННИЙ МЕТОД, МОЖЕТ БЫТЬ УДАЛЕН >>
         vec_sum = 0
         vec_count = 0
         for vec_file_path in glob(f"{folder_with_npy_vectors_path}/*.npy"):
@@ -47,6 +58,7 @@ class TimestampExtractor:
         return vec_sum / vec_count
 
     def _calc_cos_similarities_to_timestamps(self, mean_vec, folder_with_npy_vectors_path):
+        # << ОПЦИОНАЛЬНЫЙ ВНУТРЕННИЙ МЕТОД, МОЖЕТ БЫТЬ УДАЛЕН >>
         cos_similarities = []
         timestamps = []
         for vec_file_path in natsorted(glob(f"{folder_with_npy_vectors_path}/*.npy")):
@@ -59,6 +71,7 @@ class TimestampExtractor:
         return np.array(cos_similarities), np.array(timestamps)
 
     def _get_start_stop_pair_indexes(self, events_time_mask, min_pair_length, min_pair_resolution):
+        # << ОПЦИОНАЛЬНЫЙ ВНУТРЕННИЙ МЕТОД, МОЖЕТ БЫТЬ УДАЛЕН >>
         time_series = np.append(np.insert(events_time_mask, 0, 0), 0)
         if min_pair_resolution > 0:
             time_series = binary_closing(time_series, [1] * min_pair_resolution).astype(int)
