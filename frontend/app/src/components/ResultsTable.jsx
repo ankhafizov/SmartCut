@@ -111,10 +111,16 @@ export default function ResultsTable(
         const ints = [...intervals];
         document.getElementById("inputVideo").pause();
         let secs = timeStrToSecs(time);
+        if (isNaN(secs)) {
+            secs = 0;
+        }
         if (secs>parseInt(video.duration)) {
             secs = parseInt(video.duration);
         }
         ints[index][intervalType] = secs;
+        if (ints[index].stop < ints[index].start) {
+            ints[index].start = ints[index].stop
+        }
         setIntervals(ints);
         setSelectedInterval(intervals[index]);
         changeVideoPositions(ints[index].start,ints[index].stop,
