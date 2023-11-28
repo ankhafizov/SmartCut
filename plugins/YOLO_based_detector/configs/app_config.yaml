@@ -14,9 +14,12 @@ plugin:
   label: "yolo детектор слонов и тигров"
   img_size: 256
   detect_class: [3, 9] #elephant, tiger in custom dataset
-  chunk_size: 50
   data_folder: /temp_data
   img_extention: jpg
+
+timestamp_extractor:
+  min_pair_resolution_step: 3 # minimum gap between intervals in periods specified by the user
+  min_pair_length_step: 2 # minimum interval lenght in periods specified by the user
 
 kafka:
   bootstrap_servers : kafka:29092

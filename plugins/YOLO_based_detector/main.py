@@ -71,6 +71,8 @@ def main(config: DictConfig) -> None:
             result_dict[req_id]["timestamps"] = merge_timestamps(
                 result_dict[req_id]["result_detection_list"],
                 result_dict[req_id]["result_timestamps_list"],
+                config['timestamp_extractor']['min_pair_resolution_step'],
+                config['timestamp_extractor']['min_pair_length_step']
             )
 
             kafka_helper.send_processed_file_timestamps_info(
