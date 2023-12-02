@@ -35,7 +35,7 @@ function App() {
 
     const render = () => {
         return <>
-            <div className="main">
+            <div className="main" style={{height:videoSrc ? "auto" : "100%"}}>
                 {renderVideoPlayer()}
             </div>
             {videoSrc && renderTabs()}
@@ -45,23 +45,34 @@ function App() {
     const renderVideoPlayer = () => {
         return (
             <>
+                {!videoSrc && renderFrontPage()}
+                {videoSrc &&
                 <div className="videoPlayer">
                     <strong>{videoFileName ? videoFileName : "Файл не загружен"}</strong>
                     <Button type="primary" onClick={()=>uploadVideo()} icon={<DownloadOutlined/>}>
                         Загрузить видео
                     </Button>
-                </div>
-                {import.meta.env.SMARTCUT_SAMPLE_VIDEO_URL && !videoSrc &&
-                    <>
-                        <br/>
-                        <a target="_blank" href={import.meta.env.SMARTCUT_SAMPLE_VIDEO_URL}>
-                            Пример видео
-                        </a>
-                    </>
-                }
-                <video preload="auto" id="inputVideo" src={videoSrc}/><br/>
+                </div>}
+                <video preload="auto" id="inputVideo" src={videoSrc} style={{display:videoSrc ? "" : "none"}}/><br/>
                 {videoSrc && renderVideoControlPanel()}
             </>
+        )
+    }
+
+    const renderFrontPage = () => {
+        return (
+            <div className="main_outer">
+                <div className="main_inner">
+                    <img alt="Logo" src="logo.svg" style={{width:'60%'}}/>
+                    <h2>Сервис по ускорению формирования датасетов<br/> для задач видеоаналитики</h2>
+                    <Button type="primary" style={{marginBottom:20}} onClick={()=>uploadVideo()} icon={<DownloadOutlined/>}>
+                        Загрузить видео
+                    </Button>
+                    <a target="_blank" href={import.meta.env.SMARTCUT_SAMPLE_VIDEO_URL}>
+                        Пример видео
+                    </a>
+                </div>
+            </div>
         )
     }
 
@@ -145,9 +156,11 @@ function App() {
     const uploadVideo = () => {
         const input = document.createElement("input");
         input.setAttribute("type", "file");
+        input.setAttribute("accept", "video/mp4,video/x-m4v,video/*")
         input.style.display = "none";
         input.addEventListener("change", (event) => {
             if (event.target.files && event.target.files.length) {
+                setIntervals([]);
                 setIsPlaying(false);
                 setVideoSrc(URL.createObjectURL(event.target.files[0]))
                 setVideoFileName(event.target.files[0].name);
@@ -175,7 +188,7 @@ function App() {
 
     const setupVideoEventListeners = () => {
         const video = document.getElementById("inputVideo");
-
+        if (!video) { return }
         video.addEventListener("loadeddata", () => {
             const video = document.getElementById("inputVideo");
             setStartPos(0);
@@ -203,6 +216,7 @@ function App() {
             setCurrentPos(video.currentTime);
             window.scAppState.currentPos = video.currentTime;
         })
+
     }
 
     return render()
