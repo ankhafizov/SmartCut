@@ -30,7 +30,7 @@ def preprocess_img(image_path):
     return img
 
 
-def process_chunk(session, unpacked_content_path, detect_class, conf_thres=0.2):
+def process_chunk(session, unpacked_content_path, detect_class, kafka_helper, message, conf_thres=0.2):
 
     detections = []
     times_sec = []
@@ -50,6 +50,11 @@ def process_chunk(session, unpacked_content_path, detect_class, conf_thres=0.2):
             detections.append(0)
         times_sec.append(timestamp)
         os.remove(img_path)
+
+        kafka_helper.send_processed_chunk_notification(
+            user_id=message["user_id"],
+            processed_zipped_chunk_path=message["last_zipped_chunk_path"],
+        )
 
     return detections, times_sec
 

@@ -52,18 +52,13 @@ def main(config: DictConfig) -> None:
             os.remove(zipped_chunks_path)
 
             detections, chunk_timestamps = process_chunk(
-                model, unpacked_content_path, config["plugin"]["detect_class"]
+                model, unpacked_content_path, config["plugin"]["detect_class"], kafka_helper, message
             )
 
             result_dict[req_id]["result_detection_list"].extend(detections)
             result_dict[req_id]["result_timestamps_list"].extend(chunk_timestamps)
 
             logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
-
-            kafka_helper.send_processed_chunk_notification(
-                user_id=message["user_id"],
-                processed_zipped_chunk_path=message["last_zipped_chunk_path"],
-            )
 
         elif message["status"] == "uploaded":
             req_id = (message["zipped_chunks_path"].split("/"))[0]
