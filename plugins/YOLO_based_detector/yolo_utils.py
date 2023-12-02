@@ -6,6 +6,7 @@ from natsort import natsorted
 import cv2
 import numpy as np
 import onnxruntime as ort
+from scipy.ndimage import binary_closing, binary_opening
 
 
 def init_yolo_model():
@@ -53,11 +54,13 @@ def process_chunk(session, unpacked_content_path, detect_class, conf_thres=0.2):
     return detections, times_sec
 
 
-def merge_timestamps(lst, timestamps):
+def merge_timestamps(lst, timestamps, min_pair_resolution_step, min_pair_length_step):
     sequences = []
     final_timestamps = []
     start_index = None
-
+    lst = binary_closing(lst, [1] * min_pair_length_step).astype(int)
+    lst = binary_opening(lst, [1] * min_pair_resolution_step).astype(int)
+ 
     for i in range(len(lst)):
         if lst[i] == 1:
             if start_index is None:
