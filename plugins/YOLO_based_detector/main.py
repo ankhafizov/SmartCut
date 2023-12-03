@@ -39,20 +39,19 @@ def main(config: DictConfig) -> None:
 
     for message in kafka_helper.check_new_uploaded_videos():
         if message["status"] == "in-progress":
-            try:
-                zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
-                req_id = (message["last_zipped_chunk_path"].split("/"))[0]
+            zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
+            req_id = (message["last_zipped_chunk_path"].split("/"))[0]
 
-                if req_id not in result_dict:
-                    result_dict[req_id] = {}
-                    result_dict[req_id]["result_detection_list"] = []
-                    result_dict[req_id]["result_timestamps_list"] = []
+            if req_id not in result_dict:
+                result_dict[req_id] = {}
+                result_dict[req_id]["result_detection_list"] = []
+                result_dict[req_id]["result_timestamps_list"] = []
+            try:
 
                 unpacked_content_path = unzip_archive(zipped_chunks_path)
 
                 detections, chunk_timestamps = process_chunk(
-                    model, unpacked_content_path, config["plugin"]["detect_class"], kafka_helper, message
-                )
+                    model, unpacked_content_path, config["plugin"]["detect_class"], kafka_helper, message)
 
                 result_dict[req_id]["result_detection_list"].extend(detections)
                 result_dict[req_id]["result_timestamps_list"].extend(chunk_timestamps)
