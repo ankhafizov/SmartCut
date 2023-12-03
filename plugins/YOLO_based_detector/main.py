@@ -39,26 +39,30 @@ def main(config: DictConfig) -> None:
 
     for message in kafka_helper.check_new_uploaded_videos():
         if message["status"] == "in-progress":
-            zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
-            req_id = (message["last_zipped_chunk_path"].split("/"))[0]
+            try:
+                zipped_chunks_path = temp_data_folder + message["last_zipped_chunk_path"]
+                req_id = (message["last_zipped_chunk_path"].split("/"))[0]
 
-            if req_id not in result_dict:
-                result_dict[req_id] = {}
-                result_dict[req_id]["result_detection_list"] = []
-                result_dict[req_id]["result_timestamps_list"] = []
+                if req_id not in result_dict:
+                    result_dict[req_id] = {}
+                    result_dict[req_id]["result_detection_list"] = []
+                    result_dict[req_id]["result_timestamps_list"] = []
 
-            unpacked_content_path = unzip_archive(zipped_chunks_path)
+                unpacked_content_path = unzip_archive(zipped_chunks_path)
 
-            os.remove(zipped_chunks_path)
+                detections, chunk_timestamps = process_chunk(
+                    model, unpacked_content_path, config["plugin"]["detect_class"], kafka_helper, message
+                )
 
-            detections, chunk_timestamps = process_chunk(
-                model, unpacked_content_path, config["plugin"]["detect_class"], kafka_helper, message
-            )
-
-            result_dict[req_id]["result_detection_list"].extend(detections)
-            result_dict[req_id]["result_timestamps_list"].extend(chunk_timestamps)
-
-            logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
+                result_dict[req_id]["result_detection_list"].extend(detections)
+                result_dict[req_id]["result_timestamps_list"].extend(chunk_timestamps)
+            except Exception as e:
+                logging.error(f"could not process {zipped_chunks_path}, error: {str(e)}")
+                pass
+            finally:
+                logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
+                if os.path.isfile(zipped_chunks_path):
+                    os.remove(zipped_chunks_path)
 
         elif message["status"] == "uploaded":
             req_id = (message["zipped_chunks_path"].split("/"))[0]
