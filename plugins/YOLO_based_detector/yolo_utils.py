@@ -63,8 +63,10 @@ def merge_timestamps(lst, timestamps, min_pair_resolution_step, min_pair_length_
     sequences = []
     final_timestamps = []
     start_index = None
-    lst = binary_closing(lst, [1] * min_pair_length_step).astype(int)
-    lst = binary_opening(lst, [1] * min_pair_resolution_step).astype(int)
+    min_pair_length = np.ceil(min_pair_length_step / (timestamps[1] - timestamps[0])).astype(int)
+    min_pair_resolution = np.ceil(min_pair_resolution_step / (timestamps[1] - timestamps[0])).astype(int)
+    lst = binary_closing(lst, [1] * min_pair_length).astype(int)
+    lst = binary_opening(lst, [1] * min_pair_resolution).astype(int)
  
     for i in range(len(lst)):
         if lst[i] == 1:
