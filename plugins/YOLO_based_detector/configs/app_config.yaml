@@ -18,8 +18,8 @@ plugin:
   img_extention: jpg
 
 timestamp_extractor:
-  min_pair_resolution_step: 3 # minimum gap between intervals in periods specified by the user
-  min_pair_length_step: 2 # minimum interval lenght in periods specified by the user
+  min_pair_resolution_secs: 18 # gap between intervals
+  min_pair_length_secs: 10 # interval lenght
 
 kafka:
   bootstrap_servers : kafka:29092

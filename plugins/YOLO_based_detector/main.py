@@ -46,19 +46,22 @@ def main(config: DictConfig) -> None:
                 result_dict[req_id] = {}
                 result_dict[req_id]["result_detection_list"] = []
                 result_dict[req_id]["result_timestamps_list"] = []
+            try:
 
-            unpacked_content_path = unzip_archive(zipped_chunks_path)
+                unpacked_content_path = unzip_archive(zipped_chunks_path)
 
-            os.remove(zipped_chunks_path)
+                detections, chunk_timestamps = process_chunk(
+                    model, unpacked_content_path, config["plugin"]["detect_class"], kafka_helper, message)
 
-            detections, chunk_timestamps = process_chunk(
-                model, unpacked_content_path, config["plugin"]["detect_class"], kafka_helper, message
-            )
-
-            result_dict[req_id]["result_detection_list"].extend(detections)
-            result_dict[req_id]["result_timestamps_list"].extend(chunk_timestamps)
-
-            logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
+                result_dict[req_id]["result_detection_list"].extend(detections)
+                result_dict[req_id]["result_timestamps_list"].extend(chunk_timestamps)
+            except Exception as e:
+                logging.error(f"could not process {zipped_chunks_path}, error: {str(e)}")
+                pass
+            finally:
+                logging.info(f"finish processing: {zipped_chunks_path}. Removing it")
+                if os.path.isfile(zipped_chunks_path):
+                    os.remove(zipped_chunks_path)
 
         elif message["status"] == "uploaded":
             req_id = (message["zipped_chunks_path"].split("/"))[0]
@@ -66,8 +69,8 @@ def main(config: DictConfig) -> None:
             result_dict[req_id]["timestamps"] = merge_timestamps(
                 result_dict[req_id]["result_detection_list"],
                 result_dict[req_id]["result_timestamps_list"],
-                config['timestamp_extractor']['min_pair_resolution_step'],
-                config['timestamp_extractor']['min_pair_length_step']
+                config['timestamp_extractor']['min_pair_resolution_secs'],
+                config['timestamp_extractor']['min_pair_length_secs']
             )
 
             kafka_helper.send_processed_file_timestamps_info(
