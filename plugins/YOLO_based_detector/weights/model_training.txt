@@ -1,0 +1,5 @@
+Используемый даатсет для тренировки: https://universe.roboflow.com/object-detection/animal-classification-rextd
+Обучение:
+Скачайте официальный репозиторий yolov5 и установите все необходимые зависимости, затем запустите комманду для обучения сети: python train.py —data <путь до data.yaml> —epochs 50
+Конвертация в onnx:
+Внутри репозитория yolo выполните команду: python export.py --include onnx --weights <путь до весов полученных во время обучения>
